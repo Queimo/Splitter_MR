@@ -255,6 +255,15 @@ SUPPORTED_PROGRAMMING_LANGUAGES: Final[FrozenSet[str]] = _litset(
     SUPPORTED_PROGRAMMING_LANGUAGES_LIT
 )
 
+# ---- Keyword Splitter ---- #
+
+DEFAULT_KEYWORD_DELIMITER_POS: Final[str] = "before"
+
+SUPPORTED_KEYWORD_DELIMITERS_LITERAL = Literal["none", "before", "after", "both"]
+SUPPORTED_KEYWORD_DELIMITERS: Final[Tuple[str, ...]] = _littuple(
+    SUPPORTED_KEYWORD_DELIMITERS_LITERAL
+)
+
 # ---- Semantic Splitter ---- #
 
 BreakpointThresholdType = Literal[

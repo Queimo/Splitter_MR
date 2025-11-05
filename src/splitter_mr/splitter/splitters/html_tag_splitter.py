@@ -18,31 +18,6 @@ class HTMLTagSplitter(BaseSplitter):
     Behavior:
       - When `tag` is specified (e.g., tag="div"), finds all matching elements.
       - When `tag` is None, splits by the most frequent and shallowest tag.
-
-    Args:
-        chunk_size (int): Maximum chunk size in characters (only used when `batch=True`).
-        tag (str | None): HTML tag to split on. If None, auto-detects the best tag.
-        batch (bool): If True (default), groups multiple tags into a chunk, not exceeding `chunk_size`.
-            If False, returns one chunk per tag, ignoring chunk_size.
-        to_markdown (bool): If True, converts each chunk to Markdown using HtmlToMarkdown.
-
-    Example:
-        >>> reader_output = ReaderOutput(text="<div>A</div><div>B</div>")
-        >>> splitter = HTMLTagSplitter(tag="div", batch=False)
-        >>> splitter.split(reader_output).chunks
-        ['<html><body><div>A</div></body></html>', '<html><body><div>B</div></body></html>']
-        >>> splitter = HTMLTagSplitter(tag="div", batch=True, chunk_size=100)
-        >>> splitter.split(reader_output).chunks
-        ['<html><body><div>A</div><div>B</div></body></html>']
-        >>> splitter = HTMLTagSplitter(tag="div", batch=False, to_markdown=True)
-        >>> splitter.split(reader_output).chunks
-        ['A', 'B']
-
-    Attributes:
-        chunk_size (int): Maximum chunk size.
-        tag (Optional[str]): Tag to split on.
-        batch (bool): Whether to group elements into chunks.
-        to_markdown (bool): Whether to convert each chunk to Markdown.
     """
 
     def __init__(
@@ -89,6 +64,34 @@ class HTMLTagSplitter(BaseSplitter):
 
         Returns:
             SplitterOutput
+
+        Example:
+            ```python
+            reader_output = ReaderOutput(text="<div>A</div><div>B</div>")
+            splitter = HTMLTagSplitter(tag="div", batch=False)
+            splitter.split(reader_output).chunks
+            ```
+            ```python
+            ['<html><body><div>A</div></body></html>', '<html><body><div>B</div></body></html>']
+            ```
+            ```python
+            splitter = HTMLTagSplitter(tag="div", batch=True, chunk_size=100)
+            print(splitter.split(reader_output).chunks)
+            ```
+            ['<html><body><div>A</div><div>B</div></body></html>']
+            ```python
+            splitter = HTMLTagSplitter(tag="div", batch=False, to_markdown=True)
+            print(splitter.split(reader_output).chunks)
+            ```
+            ```python
+            ['A', 'B']
+            ```
+
+        Attributes:
+            chunk_size (int): Maximum chunk size.
+            tag (Optional[str]): Tag to split on.
+            batch (bool): Whether to group elements into chunks.
+            to_markdown (bool): Whether to convert each chunk to Markdown.
         """
 
         def _build_doc_with_children(children: List) -> str:

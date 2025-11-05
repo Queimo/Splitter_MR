@@ -2,7 +2,12 @@ import re
 import uuid
 from typing import Dict, Iterable, List, Pattern, Tuple, Union
 
-from ...schema import ReaderOutput, SplitterOutput
+from ...schema import (
+    DEFAULT_KEYWORD_DELIMITER_POS,
+    SUPPORTED_KEYWORD_DELIMITERS,
+    ReaderOutput,
+    SplitterOutput,
+)
 from ..base_splitter import BaseSplitter
 
 
@@ -14,25 +19,6 @@ class KeywordSplitter(BaseSplitter):
     and creates chunks at each match boundary. You can control how the matched
     delimiter is attached to the resulting chunks (before/after/both/none) and apply a
     secondary, size-based re-chunking to respect ``chunk_size``.
-
-    The splitter emits a :class:`~..schema.SplitterOutput` with metadata including
-    per-keyword match counts and raw match spans.
-
-    Args:
-        patterns (Union[List[str], Dict[str, str]]): A list of regex pattern strings **or** a mapping of
-            ``name -> regex pattern``. When a dict is provided, the keys are used in
-            the metadata counts. When a list is provided, synthetic names are
-            generated (``k0``, ``k1``, ...).
-        flags (int): Standard ``re`` flags combined with ``|`` (e.g., ``re.IGNORECASE``).
-        include_delimiters (str): Where to attach the matched keyword delimiter.
-            One of ``"none"``, ``"before"``, ``"after"``, ``"both"``.
-            - ``before`` (default) appends the match to the *preceding* chunk.
-            - ``after`` prepends the match to the *following* chunk.
-            - ``both`` duplicates the match on both sides.
-            - ``none`` omits the delimiter from both sides.
-        chunk_size (int): Target maximum size (in characters) for each chunk. When a
-            produced chunk exceeds this value, it is *soft*-wrapped by whitespace
-            using a greedy strategy.
 
     Notes:
         - All regexes are compiled into **one** alternation with *named groups* when
@@ -46,17 +32,27 @@ class KeywordSplitter(BaseSplitter):
         patterns: Union[List[str], Dict[str, str]],
         *,
         flags: int = 0,
-        include_delimiters: str = "before",
+        include_delimiters: str = DEFAULT_KEYWORD_DELIMITER_POS,
         chunk_size: int = 100000,
     ) -> None:
         """
         Initialize the KeywordSplitter.
 
         Args:
-            patterns (Union[List[str], Dict[str, str]]): Keyword regex patterns.
-            flags (int): Regex flags.
-            include_delimiters (str): How to include delimiters (before, after, both, none).
-            chunk_size (int): Max chunk size in characters.
+            patterns (Union[List[str], Dict[str, str]]): A list of regex pattern strings **or** a mapping of
+                ``name -> regex pattern``. When a dict is provided, the keys are used in
+                the metadata counts. When a list is provided, synthetic names are
+                generated (``k0``, ``k1``, ...).
+            flags (int): Standard ``re`` flags combined with ``|`` (e.g., ``re.IGNORECASE``).
+            include_delimiters (str): Where to attach the matched keyword delimiter.
+                One of ``"none"``, ``"before"``, ``"after"``, ``"both"``.
+                - ``before`` (default) appends the match to the *preceding* chunk.
+                - ``after`` prepends the match to the *following* chunk.
+                - ``both`` duplicates the match on both sides.
+                - ``none`` omits the delimiter from both sides.
+            chunk_size (int): Target maximum size (in characters) for each chunk. When a
+                produced chunk exceeds this value, it is *soft*-wrapped by whitespace
+                using a greedy strategy.
         """
         super().__init__(chunk_size=chunk_size)
         self.include_delimiters = self._validate_include_delimiters(include_delimiters)
@@ -73,7 +69,7 @@ class KeywordSplitter(BaseSplitter):
         Returns:
             SplitterOutput: Output structure with chunked text and metadata.
         """
-        text = reader_output.text or ""
+        text: str = reader_output.text or ""
 
         # Ensure document_id is present so it propagates (fixes metadata test)
         if not reader_output.document_id:
@@ -125,11 +121,12 @@ class KeywordSplitter(BaseSplitter):
         Raises:
             ValueError: If the mode is invalid.
         """
-        allowed = {"none", "before", "after", "both"}
-        v = value.lower().strip()
-        if v not in allowed:
+        v: list = value.lower().strip()
+        if v not in SUPPORTED_KEYWORD_DELIMITERS:
             raise ValueError(
-                f"include_delimiters must be one of {sorted(allowed)}, got {value!r}"
+                f"include_delimiters must be one of {
+                    sorted(SUPPORTED_KEYWORD_DELIMITERS)
+                }, got {value!r}"
             )
         return v
 
@@ -183,12 +180,12 @@ class KeywordSplitter(BaseSplitter):
             if chunk and chunk.strip():
                 acc.append(chunk)
 
-        chunks: List[str] = []
-        spans: List[Tuple[int, int]] = []
-        names: List[str] = []
+        chunks: list[str] = []
+        spans: list[tuple[int, int]] = []
+        names: list[str] = []
 
         matches = list(self.compiled.finditer(text))
-        last_idx = 0
+        last_idx: int = 0
         pending_prefix = ""  # used when include_delimiters is "after" or "both"
 
         for m in matches:
