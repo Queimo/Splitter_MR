@@ -180,7 +180,8 @@ class HeaderSplitter(BaseSplitter):
     # ---- Main method ---- #
 
     def split(self, reader_output: ReaderOutput) -> SplitterOutput:
-        """Perform header-based splitting with HTML→Markdown conversion and safe fallback.
+        """
+        Perform header-based splitting with HTML→Markdown conversion and safe fallback.
 
         Steps:
             1. Detect filetype (HTML/MD).
@@ -193,10 +194,69 @@ class HeaderSplitter(BaseSplitter):
             reader_output: The reader output containing text and metadata.
 
         Returns:
-            A :class:`SplitterOutput` with chunk contents and metadata.
+            SplitterOutput: A populated splitter output with chunk contents and metadata.
 
         Raises:
             ValueError: If ``reader_output.text`` is empty.
+
+        Example:
+            Basic Markdown input with default headers (H1–H6), keeping headers with content:
+
+            ```python
+            from splitter_mr.splitter import HeaderSplitter
+            from splitter_mr.schema.models import ReaderOutput
+
+            md = (
+                "# Title\\n"
+                "Intro paragraph.\\n\\n"
+                "## Section A\\n"
+                "Content A.\\n\\n"
+                "## Section B\\n"
+                "Content B."
+            )
+            ro = ReaderOutput(text=md, document_name="example.md")
+
+            splitter = HeaderSplitter(group_header_with_content=True)  # keep headers in chunks
+            out = splitter.split(ro)
+            print(out.chunks)
+            ```
+            Possible output (simplified):
+            ```python
+            [
+                "# Title\\nIntro paragraph.",
+                "## Section A\\nContent A.",
+                "## Section B\\nContent B."
+            ]
+            ```
+
+            HTML input with a restricted set of headers and stripping headers from chunks:
+
+            ```python
+            html = (
+                "<h1>Title</h1>"
+                "<p>Intro paragraph.</p>"
+                "<h2>Section A</h2>"
+                "<p>Content A.</p>"
+                "<h3>Sub A.1</h3>"
+                "<p>Detail A.1</p>"
+            )
+            ro = ReaderOutput(text=html, document_name="example.html")
+
+            # Only split on Header 1 and Header 2 (i.e., H1/H2)
+            splitter = HeaderSplitter(
+                headers_to_split_on=("Header 1", "Header 2"),
+                group_header_with_content=False  # drop headers from chunks
+            )
+            out = splitter.split(ro)
+            print(out.chunks)
+            ```
+            Possible output (simplified):
+            ```python
+            [
+                "Intro paragraph.",
+                "Content A.\\nSub A.1\\nDetail A.1"
+            ]
+            ```
         """
         if not reader_output.text:
             raise ValueError("reader_output.text is empty or None")

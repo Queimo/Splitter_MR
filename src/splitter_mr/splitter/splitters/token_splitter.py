@@ -80,31 +80,75 @@ class TokenSplitter(BaseSplitter):
 
     def split(self, reader_output: ReaderOutput) -> SplitterOutput:
         """
-        Splits the input text from `reader_output` into token-based chunks using
-        the specified tokenizer.
+        Split the input text from `reader_output` into token-based chunks using
+        the specified tokenizer backend.
 
-        Depending on `model_name`, the splitter chooses the appropriate tokenizer:
+        Depending on the `model_name` value, this splitter dispatches to the
+        appropriate tokenization engine:
 
-        - For `tiktoken`, uses `RecursiveCharacterTextSplitter` with tiktoken encoding.
-            e.g.: `tiktoken/cl100k_base`.
-        - For `spacy`, uses `SpacyTextSplitter` with the specified spaCy pipeline.
-            e.g., `spacy/en_core_web_sm`.
-        - For `nltk`, uses `NLTKTextSplitter` with the specified language tokenizer.
-            e.g., `nltk/punkt_tab`.
+            - **tiktoken:** Uses OpenAI encodings via :class:`RecursiveCharacterTextSplitter`.
+            Example model: ``tiktoken/cl100k_base``.
+            - **spaCy:** Uses the specified pipeline via :class:`SpacyTextSplitter`.
+            Example model: ``spacy/en_core_web_sm``.
+            - **NLTK:** Uses the Punkt sentence tokenizer via :class:`NLTKTextSplitter`.
+            Example model: ``nltk/punkt_tab``.
 
-        Automatically downloads spaCy and NLTK models if missing.
+        Models or language data are downloaded automatically if missing.
 
         Args:
-            reader_output (Dict[str, Any]):
-                Dictionary containing at least a 'text' key (str) and optional document metadata,
-                such as 'document_name', 'document_path', 'document_id', etc.
+            reader_output (ReaderOutput): Input document and metadata containing
+                at least a ``text`` field.
 
         Returns:
-            SplitterOutput: Dataclass defining the output structure for all splitters.
+            SplitterOutput: Structured output with token-based chunks, unique IDs,
+            and splitter configuration metadata.
 
         Raises:
-            RuntimeError: If a spaCy model specified in `model_name` is not available.
-            ValueError: If an unsupported tokenizer is specified in `model_name`.
+            RuntimeError: If a specified spaCy model cannot be downloaded or loaded.
+            ValueError: If an unsupported tokenizer is specified in ``model_name``.
+
+        Example:
+            Basic usage with **tiktoken** (OpenAI tokenizer):
+
+            ```python
+            from splitter_mr.splitter import TokenSplitter
+            from splitter_mr.schema.models import ReaderOutput
+
+            text = (
+                "This is a demonstration of the TokenSplitter. "
+                "It splits text into chunks based on token counts."
+            )
+
+            ro = ReaderOutput(text=text, document_name="demo.txt")
+            splitter = TokenSplitter(chunk_size=20, model_name="tiktoken/cl100k_base")
+            output = splitter.split(ro)
+
+            print(output.chunks)
+            ```
+            Example output:
+            ```python
+            ['This is a demonstration of the TokenSplitter.',
+            'It splits text into chunks based on token counts.']
+            ```
+
+            Using **spaCy** for linguistic tokenization:
+
+            ```python
+            splitter = TokenSplitter(chunk_size=50, model_name="spacy/en_core_web_sm")
+            output = splitter.split(ro)
+            print(output.chunks)
+            ```
+
+            Using **NLTK** with a specific language:
+
+            ```python
+            splitter = TokenSplitter(chunk_size=40, model_name="nltk/punkt_tab", language="english")
+            output = splitter.split(ro)
+            print(output.chunks)
+            ```
+
+            Each backend respects the configured ``chunk_size`` (tokens, not characters)
+            and produces chunks aligned to the tokenization strategy.
         """
         text = reader_output.text
         tokenizer, model = self._parse_model()

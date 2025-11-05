@@ -203,7 +203,9 @@ class CodeSplitter(BaseSplitter):
             splitter = CodeSplitter(chunk_size=50, language="python")
             output = splitter.split(reader_output)
             print(output.chunks)
-            # ['def foo():\\n    pass\\n', 'class Bar:\\n    def baz(self):\\n        pass']
+            ```
+            ```python
+            ['def foo():\\n    pass\\n', 'class Bar:\\n    def baz(self):\\n        pass']
             ```
         """
         text = reader_output.text or ""

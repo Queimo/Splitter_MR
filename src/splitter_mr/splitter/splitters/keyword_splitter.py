@@ -63,11 +63,74 @@ class KeywordSplitter(BaseSplitter):
         """
         Split ReaderOutput into keyword-delimited chunks and build structured output.
 
+        The method first splits around regex keyword matches (respecting
+        ``include_delimiters``), then performs a secondary size-based soft wrap to
+        respect ``chunk_size``. It returns a fully populated :class:`SplitterOutput`.
+
         Args:
             reader_output (ReaderOutput): Input document and metadata.
 
         Returns:
             SplitterOutput: Output structure with chunked text and metadata.
+
+        Example:
+
+            Basic usage with a **list** of patterns:
+
+            ```python
+            from splitter_mr.splitter import KeywordSplitter
+            from splitter_mr.schema.models import ReaderOutput
+
+            text = (
+                "Intro paragraph.\n"
+                "## Section A\nBody A.\n"
+                "## Section B\nBody B.\n"
+                "Conclusion."
+            )
+            ro = ReaderOutput(text=text, document_name="demo.md")
+
+            splitter = KeywordSplitter(
+                patterns=[r"^##\\s+.*$", r"Conclusion\\.",],  # headings + the word 'Conclusion.'
+                flags=re.MULTILINE,
+                include_delimiters="before",  # attach the matched delimiter to the left chunk
+                chunk_size=1000,
+            )
+            out = splitter.split(ro)
+            print(out.chunks)
+            ```
+            ```python
+            [
+                "Intro paragraph.\n## Section A",
+                "Body A.\n## Section B",
+                "Body B.\nConclusion."
+            ]
+            ```
+
+            Using a **dict** to name patterns (names show up in metadata counts):
+
+            ```python
+            patterns = {
+                "h2": r"^##\\s+.*$",
+                "the_end": r"^Conclusion\\.$",
+            }
+            splitter = KeywordSplitter(
+                patterns=patterns,
+                flags=re.MULTILINE,
+                include_delimiters="after",  # put the matched delimiter at the start of the next chunk
+                chunk_size=1000,
+            )
+            out = splitter.split(ro)
+            print(out.metadata["keyword_matches"]["counts"])
+            ```
+            ```python
+            {'h2': 2, 'the_end': 1}
+            ```
+            ```python
+            print(out.split_params["pattern_names"])
+            ```
+            ```python
+            ['h2', 'the_end']
+            ```
         """
         text: str = reader_output.text or ""
 

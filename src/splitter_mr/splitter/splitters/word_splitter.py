@@ -48,9 +48,9 @@ class WordSplitter(BaseSplitter):
             from splitter_mr.splitter import WordSplitter
 
             reader_output = ReaderOutput(
-                text: "The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs. Sphinx of black quartz, judge my vow.",
-                document_name: "pangrams.txt",
-                document_path: "/https://raw.githubusercontent.com/andreshere00/Splitter_MR/refs/heads/main/data/pangrams.txt",
+                text: "My Wonderful Family\nI live in a house near the mountains.I have two brothers and one sister, and I was born last...",
+                document_name: "my_wonderful_family.txt",
+                document_path: "https://raw.githubusercontent.com/andreshere00/Splitter_MR/refs/heads/main/data/my_wonderful_family.txt",
             )
 
             # Split into chunks of 5 words, overlapping by 2 words
@@ -59,9 +59,9 @@ class WordSplitter(BaseSplitter):
             print(output["chunks"])
             ```
             ```python
-            ['The quick brown fox jumps',
-            'fox jumps over the lazy',
-            'over the lazy dog. Pack', ...]
+            ['My Wonderful Family\nI live',
+            'I live in a house near',
+            'house near the mountains.I', ...]
             ```
         """
         # Initialize variables

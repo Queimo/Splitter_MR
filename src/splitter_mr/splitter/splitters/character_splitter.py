@@ -152,7 +152,9 @@ class CharacterSplitter(BaseSplitter):
             splitter = CharacterSplitter(chunk_size=10, chunk_overlap=0.2)
             output = splitter.split(reader_output)
             print(output.chunks)
-            # ['Hello worl', 'world! Thi', 'is is a te', ...]
+            ```
+            ```python
+            ['Hello worl', 'world! Thi', 'is is a te', ...]
             ```
         """
         text = reader_output.text
