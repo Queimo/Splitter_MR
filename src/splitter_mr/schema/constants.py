@@ -20,6 +20,9 @@ def _littuple(lit: object) -> Tuple[str, ...]:
 # Readers #
 # ------- #
 
+DEFAULT_PAGE_PLACEHOLDER: Final[str] = "<!-- page -->"
+DEFAULT_IMAGE_PLACEHOLDER: Final[str] = "<!-- image -->"
+
 # ---- MarkitDownReader ---- #
 
 MARKITDOWN_SUPPORTED_MODELS_LITERAL = Literal[
@@ -65,11 +68,22 @@ SUPPORTED_VANILLA_IMAGE_EXTENSIONS: Final[FrozenSet[str]] = _litset(
     SUPPORTED_VANILLA_IMAGE_EXTENSIONS_LITERAL
 )
 
+VANILLA_TXT_FILES_EXTENSIONS_LITERAL = Literal[
+    "json", "txt", "xml", "csv", "tsv", "md", "markdown"
+]
+VANILLA_TXT_FILES_EXTENSIONS: Final[FrozenSet[str]] = _litset(
+    VANILLA_TXT_FILES_EXTENSIONS_LITERAL
+)
+
 # ------------- #
 # Vision Models #
 # ------------- #
 
+DEFAULT_IMAGE_EXTENSION: Final[str] = "png"
+
 # ---- OpenAI & AzureOpenAI Vision Model ---- #
+
+DEFAULT_OPENAI_MODEL: Final[str] = "gpt-5"
 
 OPENAI_MIME = Literal["image/png", "image/jpeg", "image/webp", "image/gif"]
 SUPPORTED_OPENAI_MIME_TYPES: Final[FrozenSet[str]] = _litset(OPENAI_MIME)
@@ -87,8 +101,15 @@ OPENAI_MIME_BY_EXTENSION: Final[Mapping[str, str]] = MappingProxyType(
 assert set(OPENAI_MIME_BY_EXTENSION.values()).issubset(SUPPORTED_OPENAI_MIME_TYPES), (
     "OPENAI_MIME_BY_EXTENSION has values not in OPENAI_MIME Literal"
 )
+# ---- Anthropic Vision Model ---- #
+
+DEFAULT_ANTHROPIC_MODEL: Final[str] = "claude-sonnet-4"
+DEFAULT_ANTHROPIC_ENTRYPOINT: Final[str] = "https://api.anthropic.com/v1/"
 
 # ---- Grok Vision Model ---- #
+
+DEFAULT_GROK_VISION_MODEL: Final[str] = "grok-4"
+DEFAULT_GROK_ENDPOINT: Final[str] = "https://api.x.ai/v1"
 
 GROK_MIME = Literal["image/png", "image/jpeg"]
 SUPPORTED_GROK_MIME_TYPES: Final[FrozenSet[str]] = _litset(GROK_MIME)
@@ -104,7 +125,13 @@ assert set(GROK_MIME_BY_EXTENSION.values()).issubset(SUPPORTED_GROK_MIME_TYPES),
     "GROK_MIME_BY_EXTENSION has values not in GROK_MIME Literal"
 )
 
+# ---- Gemini Vision Model ---- #
+
+DEFAULT_GEMINI_VISION_MODEL: Final[str] = "gemini-2.5-flash"
+
 # ---- HuggingFace Vision Model ---- #
+
+DEFAULT_HUGGINGFACE_MODEL: Final[str] = "ds4sd/SmolDocling-256M-preview"
 
 DEFAULT_IMAGE_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
     {

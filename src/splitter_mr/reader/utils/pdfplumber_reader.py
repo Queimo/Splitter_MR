@@ -7,7 +7,11 @@ from typing import Any, Dict, List, Optional, Tuple
 import pdfplumber
 
 from ...model import BaseVisionModel
-from ...schema import DEFAULT_IMAGE_CAPTION_PROMPT
+from ...schema import (
+    DEFAULT_IMAGE_CAPTION_PROMPT,
+    DEFAULT_IMAGE_PLACEHOLDER,
+    DEFAULT_PAGE_PLACEHOLDER,
+)
 
 
 class PDFPlumberReader:
@@ -126,7 +130,7 @@ class PDFPlumberReader:
         page_num: int,
         prompt: Optional[str] = None,
         model: Optional[BaseVisionModel] = None,
-        image_placeholder: str = "<!-- image -->",
+        image_placeholder: str = DEFAULT_IMAGE_PLACEHOLDER,
     ) -> List[Dict[str, Any]]:
         """
         Extracts images from a PDF page as base64-encoded PNG data, with optional annotation via a model.
@@ -202,7 +206,7 @@ class PDFPlumberReader:
         page_num: int,
         prompt: Optional[str] = None,
         model: Optional[BaseVisionModel] = None,
-        image_placeholder: str = "<!-- image -->",
+        image_placeholder: str = DEFAULT_IMAGE_PLACEHOLDER,
     ) -> List[Dict[str, Any]]:
         """
         Extracts all structural content blocks (tables, images, text) from a PDF page.
@@ -300,8 +304,8 @@ class PDFPlumberReader:
         self,
         all_blocks: List[Dict[str, Any]],
         show_base64_images: bool = True,
-        image_placeholder: str = "<!-- image -->",
-        page_placeholder: str = "<!-- page -->",
+        image_placeholder: str = DEFAULT_IMAGE_PLACEHOLDER,
+        page_placeholder: str = DEFAULT_PAGE_PLACEHOLDER,
     ) -> str:
         """
         Converts a list of content blocks into Markdown, optionally embedding images and tables.
@@ -309,8 +313,8 @@ class PDFPlumberReader:
         Args:
             all_blocks (List[Dict[str, Any]]): All content blocks, possibly across multiple pages.
             show_base64_images (bool): Whether to render images inline. If False, images are omitted or replaced with an indicator.
-            `image_placeholder (Optional[str])`: Placeholder string to use for omitted images in PDFs. Default is `"<!-- image -->"`.
-            `page_placeholder (Optional[str])`: Placeholder string for PDF page breaks. Default is `"<!-- page -->"`.
+            `image_placeholder (Optional[str])`: Placeholder string to use for omitted images in PDFs. Default is `DEFAULT_IMAGE_PLACEHOLDER`.
+            `page_placeholder (Optional[str])`: Placeholder string for PDF page breaks. Default is `DEFAULT_PAGE_PLACEHOLDER`.
 
         Returns:
             str: Markdown document representing the extracted content.
@@ -401,8 +405,8 @@ class PDFPlumberReader:
         prompt: Optional[str] = None,
         model: Optional[BaseVisionModel] = None,
         show_base64_images: bool = False,
-        image_placeholder: str = "<!-- image -->",
-        page_placeholder: str = "<!-- page -->",
+        image_placeholder: str = DEFAULT_IMAGE_PLACEHOLDER,
+        page_placeholder: str = DEFAULT_PAGE_PLACEHOLDER,
     ) -> str:
         """
         Reads a PDF file and returns extracted content as Markdown.
@@ -412,8 +416,8 @@ class PDFPlumberReader:
             model (Optional[BaseVisionModel], optional): Optional model for image annotation.
             prompt (str, optional): Prompt for the image annotation model.
             show_base64_images (bool, optional): If True, images are included as base64 in Markdown. If False, they are omitted or replaced with a image_placeholder.
-            `image_placeholder (Optional[str])`: Placeholder string to use for omitted images in PDFs. Default is `"<!-- image -->"`.
-            `page_placeholder (Optional[str])`: Placeholder string for PDF page breaks. Default is `"<!-- page -->"`.
+            `image_placeholder (Optional[str])`: Placeholder string to use for omitted images in PDFs. Default is `DEFAULT_IMAGE_PLACEHOLDER`.
+            `page_placeholder (Optional[str])`: Placeholder string for PDF page breaks. Default is `DEFAULT_PAGE_PLACEHOLDER`.
 
         Returns:
             str: Markdown-formatted string with structured content from the PDF.

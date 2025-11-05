@@ -236,7 +236,7 @@ def test_analyze_content_png(model, fake_img_b64):
 
 def test_analyze_content_missing_image(model):
     with pytest.raises(ValueError):
-        model.analyze_content("Prompt", None)
+        model.analyze_content(prompt="Prompt", file=None)
 
 
 def test_analyze_content_unknown_extension(model, fake_img_b64):

@@ -1,11 +1,7 @@
 import re
 from typing import List, Union
 
-from ...schema import (  # regex: terminator + trailing quotes/brackets + optional space
-    DEFAULT_SENTENCE_SEPARATORS,
-    ReaderOutput,
-    SplitterOutput,
-)
+from ...schema import DEFAULT_SENTENCE_SEPARATORS, ReaderOutput, SplitterOutput
 from ..base_splitter import BaseSplitter
 
 

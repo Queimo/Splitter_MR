@@ -3,7 +3,23 @@ import mimetypes
 from typing import Any, Dict, List, Optional, Tuple
 
 from ...model import BaseVisionModel
-from ...schema import HFChatImageContent, HFChatMessage, HFChatTextContent
+from ...schema import (
+    DEFAULT_HUGGINGFACE_MODEL,
+    DEFAULT_IMAGE_CAPTION_PROMPT,
+    DEFAULT_IMAGE_EXTENSION,
+    HFChatImageContent,
+    HFChatMessage,
+    HFChatTextContent,
+)
+
+DEFAULT_EXT: str = "jpg"
+FALLBACKS: List[Tuple[str, Optional[Any]]] = [
+    ("AutoModelForVision2Seq", None),
+    ("AutoModelForImageTextToText", None),
+    ("AutoModelForCausalLM", None),
+    ("AutoModelForPreTraining", None),
+    ("AutoModel", None),
+]
 
 
 class HuggingFaceVisionModel(BaseVisionModel):
@@ -33,16 +49,7 @@ class HuggingFaceVisionModel(BaseVisionModel):
         ```
     """
 
-    DEFAULT_EXT: str = "jpg"
-    FALLBACKS: List[Tuple[str, Optional[Any]]] = [
-        ("AutoModelForVision2Seq", None),
-        ("AutoModelForImageTextToText", None),
-        ("AutoModelForCausalLM", None),
-        ("AutoModelForPreTraining", None),
-        ("AutoModel", None),
-    ]
-
-    def __init__(self, model_name: str = "ds4sd/SmolDocling-256M-preview") -> None:
+    def __init__(self, model_name: str = DEFAULT_HUGGINGFACE_MODEL) -> None:
         """
         Initialize a HuggingFaceVisionModel.
 
@@ -119,9 +126,9 @@ class HuggingFaceVisionModel(BaseVisionModel):
 
     def analyze_content(
         self,
-        prompt: str,
         file: Optional[bytes],
-        file_ext: Optional[str] = None,
+        prompt: str = DEFAULT_IMAGE_CAPTION_PROMPT,
+        file_ext: Optional[str] = DEFAULT_IMAGE_EXTENSION,
         **parameters: Dict[str, Any],
     ) -> str:
         """
@@ -152,7 +159,7 @@ class HuggingFaceVisionModel(BaseVisionModel):
             raise ValueError("No image file provided for extraction.")
 
         ext = (file_ext or self.DEFAULT_EXT).lower()
-        mime_type = mimetypes.types_map.get(f".{ext}", "image/jpeg")
+        mime_type = mimetypes.types_map.get(f".{ext}", "image/png")
         img_b64 = file if isinstance(file, str) else file.decode("utf-8")
         img_data_uri = f"data:{mime_type};base64,{img_b64}"
 

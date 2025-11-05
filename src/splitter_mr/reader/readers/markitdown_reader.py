@@ -13,7 +13,11 @@ from openai import OpenAI
 from pypdf import PdfReader, PdfWriter
 
 from ...model import BaseVisionModel
-from ...schema import DEFAULT_IMAGE_EXTRACTION_PROMPT, ReaderOutput
+from ...schema import (
+    DEFAULT_IMAGE_EXTRACTION_PROMPT,
+    DEFAULT_PAGE_PLACEHOLDER,
+    ReaderOutput,
+)
 from ..base_reader import BaseReader
 
 
@@ -253,9 +257,9 @@ class MarkItDownReader(BaseReader):
         file_path: str | Path = os.fspath(file_path)
         ext: str = os.path.splitext(file_path)[1].lower().lstrip(".")
         prompt: str = kwargs.get("prompt", DEFAULT_IMAGE_EXTRACTION_PROMPT)
-        page_placeholder: str = kwargs.get("page_placeholder", "<!-- page -->")
+        page_placeholder: str = kwargs.get("page_placeholder", DEFAULT_PAGE_PLACEHOLDER)
         split_by_pages: bool = kwargs.get("split_by_pages", False)
-        conversion_method: str = None
+        conversion_method: str | None = None
         md, ocr_method = self._get_markitdown()
 
         PDF_CONVERTIBLE_EXT: Set[str] = {"docx", "pptx", "xlsx"}
