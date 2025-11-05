@@ -12,9 +12,9 @@ from langchain_text_splitters import (
 
 from ...schema import ReaderOutput, SplitterOutput
 from ...schema.constants import (
+    DEFAULT_NLTK,
     DEFAULT_TOKEN_LANGUAGE,
     DEFAULT_TOKENIZER,
-    NLTK_DEFAULTS,
     SPACY_DEFAULTS,
     SUPPORTED_TOKENIZERS,
     TIKTOKEN_DEFAULTS,
@@ -155,7 +155,7 @@ class TokenSplitter(BaseSplitter):
                 nltk.data.find(f"tokenizers/punkt/{self.language}.pickle")
             except LookupError:
                 # Use constants instead of hard-coded 'punkt_tab'
-                nltk.download(NLTK_DEFAULTS[0])
+                nltk.download(DEFAULT_NLTK[0])
             splitter = NLTKTextSplitter(
                 chunk_size=self.chunk_size,
                 chunk_overlap=0,

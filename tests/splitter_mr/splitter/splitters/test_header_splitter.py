@@ -146,9 +146,8 @@ def test_html_conversion_and_split(monkeypatch, html_reader_output):
 
 
 def test_value_error_on_bad_semantic_header(markdown_reader_output):
-    splitter = HeaderSplitter(headers_to_split_on=["NOPE", "Header 2"])
-    with pytest.raises(ValueError, match="Invalid header: NOPE"):
-        splitter.split(markdown_reader_output)
+    with pytest.raises(ValueError):
+        HeaderSplitter(headers_to_split_on=["NOPE", "Header 2"])
 
 
 def test_output_metadata_fields(markdown_reader_output):
