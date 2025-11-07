@@ -10,3 +10,11 @@ class SplitterInputWarning(UserWarning):
     """
 
     pass
+
+
+class FiletypeAmbiguityWarning(UserWarning):
+    """
+    Warned when filetype heuristics disagree (extension vs DOM sniff).
+    """
+
+    pass

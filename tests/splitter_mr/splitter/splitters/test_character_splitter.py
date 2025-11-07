@@ -46,7 +46,7 @@ def test_overlap_int(reader_output_alpha):
 
 
 def test_overlap_float(reader_output_alpha):
-    splitter = CharacterSplitter(chunk_size=10, chunk_overlap=0.3)  # overlap=3, step=7
+    splitter = CharacterSplitter(chunk_size=10, chunk_overlap=0.3)
     result = splitter.split(reader_output_alpha)
     assert result.chunks[0] == "abcdefghij"  # 0:10
     assert result.chunks[1] == "hijklmnopq"  # 7:17

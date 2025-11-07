@@ -1,4 +1,5 @@
 from .constants import (
+    ALLOWED_HEADERS,
     DEFAULT_ANTHROPIC_ENTRYPOINT,
     DEFAULT_ANTHROPIC_MODEL,
     DEFAULT_BREAKPOINTS,
@@ -36,6 +37,16 @@ from .constants import (
     VANILLA_TXT_FILES_EXTENSIONS,
     BreakpointThresholdType,
 )
+from .exceptions import (
+    HeaderLevelOutOfRangeError,
+    HtmlConversionError,
+    InvalidChunkException,
+    InvalidHeaderNameError,
+    NormalizationError,
+    ReaderException,
+    SplitterException,
+    SplitterOutputException,
+)
 from .models import (
     HFChatImageContent,
     HFChatMessage,
@@ -49,6 +60,7 @@ from .models import (
     SplitterOutput,
 )
 from .prompts import DEFAULT_IMAGE_CAPTION_PROMPT, DEFAULT_IMAGE_EXTRACTION_PROMPT
+from .warnings import FiletypeAmbiguityWarning, SplitterInputWarning
 
 __all__ = [
     "BreakpointThresholdType",
@@ -62,6 +74,17 @@ __all__ = [
     "HFClient",
     "HFChatMessage",
     "HFChatTextContent",
+    "ReaderException",
+    "SplitterException",
+    "SplitterOutputException",
+    "InvalidChunkException",
+    "NormalizationError",
+    "HtmlConversionError",
+    "InvalidHeaderNameError",
+    "HeaderLevelOutOfRangeError",
+    "SplitterInputWarning",
+    "FiletypeAmbiguityWarning",
+    "ALLOWED_HEADERS",
     "DEFAULT_ANTHROPIC_ENTRYPOINT",
     "DEFAULT_ANTHROPIC_MODEL",
     "DEFAULT_BREAKPOINTS",

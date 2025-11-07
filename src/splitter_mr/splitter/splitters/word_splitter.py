@@ -25,12 +25,7 @@ class WordSplitter(BaseSplitter):
         self.chunk_overlap = chunk_overlap
 
     def split(self, reader_output: ReaderOutput) -> SplitterOutput:
-        """
-        Splits the input text from the reader_output dictionary into word-based chunks.
-
-        Each chunk contains at most `chunk_size` words, and adjacent chunks can overlap
-        by a specified number or percentage of words, according to the `chunk_overlap`
-        parameter set at initialization.
+        """Splits the input text from the reader_output dictionary into word-based chunks.
 
         Args:
             reader_output (Dict[str, Any]):
@@ -48,7 +43,7 @@ class WordSplitter(BaseSplitter):
             from splitter_mr.splitter import WordSplitter
 
             reader_output = ReaderOutput(
-                text: "My Wonderful Family\nI live in a house near the mountains.I have two brothers and one sister, and I was born last...",
+                text: "My Wonderful Family\\nI live in a house near the mountains.I have two brothers and one sister, and I was born last...",
                 document_name: "my_wonderful_family.txt",
                 document_path: "https://raw.githubusercontent.com/andreshere00/Splitter_MR/refs/heads/main/data/my_wonderful_family.txt",
             )
@@ -59,7 +54,7 @@ class WordSplitter(BaseSplitter):
             print(output["chunks"])
             ```
             ```python
-            ['My Wonderful Family\nI live',
+            ['My Wonderful Family\\nI live',
             'I live in a house near',
             'house near the mountains.I', ...]
             ```

@@ -1,6 +1,5 @@
-# header_splitter.py
-
 import re
+import warnings
 from typing import List, Optional, Sequence, Tuple, cast
 
 from bs4 import BeautifulSoup
@@ -9,11 +8,19 @@ from langchain_text_splitters import (
     RecursiveCharacterTextSplitter,
 )
 
-from splitter_mr.schema.constants import ALLOWED_HEADERS
-from splitter_mr.schema.constants import ALLOWED_HEADERS_LITERAL as HeaderName
-
 from ...reader.utils import HtmlToMarkdown
-from ...schema import ReaderOutput, SplitterOutput
+from ...schema import (
+    ALLOWED_HEADERS,
+    FiletypeAmbiguityWarning,
+    HeaderLevelOutOfRangeError,
+    HtmlConversionError,
+    InvalidHeaderNameError,
+    NormalizationError,
+    ReaderOutput,
+    SplitterInputWarning,
+    SplitterOutput,
+)
+from ...schema.constants import ALLOWED_HEADERS_LITERAL as HeaderName
 from ..base_splitter import BaseSplitter
 
 
@@ -89,7 +96,8 @@ class HeaderSplitter(BaseSplitter):
             allowed_display: str = ", ".join(ALLOWED_HEADERS)
             bad_display: str = ", ".join(invalid)
             raise ValueError(
-                f"Invalid headers: [{bad_display}]. Allowed values are: [{allowed_display}]."
+                f"Invalid headers: [{bad_display}]. "
+                f"Allowed values are: [{allowed_display}]."
             )
         # Preserve caller order but store immutably.
         return cast(Tuple[HeaderName, ...], tuple(headers))
@@ -128,10 +136,15 @@ class HeaderSplitter(BaseSplitter):
         Raises:
             ValueError: If the header string is not of the expected form.
         """
-        m: str | None = re.match(r"header\s*(\d+)", header.lower())
+        m = re.match(r"header\s*(\d+)", header.lower())
         if not m:
-            raise ValueError(f"Invalid header: {header}")
-        return int(m.group(1))
+            raise InvalidHeaderNameError(f"Expected 'Header N', got: {header!r}")
+        level = int(m.group(1))
+        if not 1 <= level <= 7:
+            raise HeaderLevelOutOfRangeError(
+                f"Header level {level} out of range [1..7]"
+            )
+        return level
 
     @staticmethod
     def _guess_filetype(reader_output: ReaderOutput) -> str:
@@ -146,20 +159,36 @@ class HeaderSplitter(BaseSplitter):
         Returns:
             ``"html"`` if the text appears to be HTML, otherwise ``"md"``.
         """
-        name = (reader_output.document_name or "").lower()
-        if name.endswith((".html", ".htm")):
-            return "html"
-        if name.endswith((".md", ".markdown")):
-            return "md"
+        name: str = (reader_output.document_name or "").lower()
+        md_ext: str = "md" if name.endswith((".md", ".markdown")) else None
+        ext_hint: str = "html" if name.endswith((".html", ".htm")) else md_ext
 
-        soup = BeautifulSoup(reader_output.text or "", "html.parser")
-        if soup.find("html") or soup.find(re.compile(r"^h[1-6]$")) or soup.find("div"):
-            return "html"
-        return "md"
+        text: str = reader_output.text or ""
+        soup = BeautifulSoup(text, "html.parser")
+        dom_hint: str = (
+            "html"
+            if (
+                soup.find("html")  # noqa: W503
+                or soup.find(re.compile(r"^h[1-6]$"))  # noqa: W503
+                or soup.find("div")  # noqa: W503
+            )
+            else "md"
+        )
+
+        if ext_hint and ext_hint != dom_hint:
+            warnings.warn(
+                FiletypeAmbiguityWarning(
+                    f"Filetype heuristics disagree for {name!r}: "
+                    f"extension suggests {ext_hint}, DOM suggests {dom_hint}. "
+                    f"Proceeding with {dom_hint}."
+                )
+            )
+        return dom_hint
 
     @staticmethod
     def _normalize_setext(md_text: str) -> str:
-        """Normalize Setext-style headings to ATX so MarkdownHeaderTextSplitter can detect them.
+        """Normalize Setext-style headings to ATX so MarkdownHeaderTextSplitter
+        can detect them.
 
         Transformations:
             - ``H1:  Title\\n====  →  # Title``
@@ -171,11 +200,47 @@ class HeaderSplitter(BaseSplitter):
         Returns:
             Markdown text with Setext headings rewritten as ATX headings.
         """
-        # H1 underlines
-        md_text = re.sub(r"^(?P<t>[^\n]+)\n=+\s*$", r"# \g<t>", md_text, flags=re.M)
-        # H2 underlines
-        md_text = re.sub(r"^(?P<t>[^\n]+)\n-+\s*$", r"## \g<t>", md_text, flags=re.M)
-        return md_text
+        fence = re.compile(r"(^```.*?$)(.*?)(^```$)", flags=re.M | re.S)
+        placeholders: list[str] = []
+
+        def _stash(m: re.Match) -> str:
+            placeholders.append(m.group(0))
+            return f"__CODEFENCE_PLACEHOLDER_{len(placeholders) - 1}__"
+
+        try:
+            protected = re.sub(fence, _stash, md_text)
+        except re.error as e:
+            raise NormalizationError(f"Failed to scan code fences: {e}") from e
+
+        # Normalize setext in the protected text only (outside fences)
+        try:
+            protected = re.sub(
+                r"^(?P<t>[^\n]+)\n=+\s*$", r"# \g<t>", protected, flags=re.M
+            )
+            protected = re.sub(
+                r"^(?P<t>[^\n]+)\n-+\s*$", r"## \g<t>", protected, flags=re.M
+            )
+        except re.error as e:
+            raise NormalizationError(f"Setext→ATX normalization failed: {e}") from e
+
+        # Restore code fences
+        def _unstash(match: re.Match) -> str:
+            idx = int(match.group(1))
+            return placeholders[idx]
+
+        try:
+            normalized = re.sub(r"__CODEFENCE_PLACEHOLDER_(\d+)__", _unstash, protected)
+        except Exception as e:
+            raise NormalizationError(
+                "Failed to restore code fences after normalization"
+            ) from e
+
+        if re.search(r"^[^\n]+\n[=-]{2,}\s*$", normalized, flags=re.M):
+            raise NormalizationError(
+                "Unnormalized Setext headings remain after normalization"
+            )
+
+        return normalized
 
     # ---- Main method ---- #
 
@@ -258,8 +323,31 @@ class HeaderSplitter(BaseSplitter):
             ]
             ```
         """
-        if not reader_output.text:
-            raise ValueError("reader_output.text is empty or None")
+        text: str = reader_output.text
+        if text is None or not str(text).strip():
+            warnings.warn(
+                SplitterInputWarning(
+                    "ReaderOutput.text is empty or whitespace-only. "
+                    "Proceeding; this will yield a single empty chunk."
+                )
+            )
+            chunks = [""]
+            return SplitterOutput(
+                chunks=chunks,
+                chunk_id=self._generate_chunk_ids(len(chunks)),
+                document_name=reader_output.document_name,
+                document_path=reader_output.document_path,
+                document_id=reader_output.document_id,
+                conversion_method=reader_output.conversion_method,
+                reader_method=reader_output.reader_method,
+                ocr_method=reader_output.ocr_method,
+                split_method="header_splitter",
+                split_params={
+                    "headers_to_split_on": list(self.headers_to_split_on),
+                    "group_header_with_content": self.group_header_with_content,
+                },
+                metadata=self._default_metadata(),
+            )
 
         filetype: str = self._guess_filetype(reader_output)
         tuples: list[tuple] = self._make_tuples("md")
@@ -268,13 +356,17 @@ class HeaderSplitter(BaseSplitter):
 
         # HTML → Markdown using the project's converter
         if filetype == "html":
-            text = HtmlToMarkdown().convert(text)
+            try:
+                text = HtmlToMarkdown().convert(text)
+            except Exception as e:
+                raise HtmlConversionError(
+                    f"HTML→Markdown failed for {reader_output.document_name!r}"
+                ) from e
         else:
-            # Normalize Setext headings if already Markdown
             text = self._normalize_setext(text)
 
         # Detect presence of ATX headers (after conversion/normalization)
-        has_headers = bool(re.search(r"(?m)^\s*#{1,6}\s+\S", text))
+        has_headers: bool = bool(re.search(r"(?m)^\s*#{1,6}\s+\S", text))
 
         # Configure header splitter. group_header_with_content -> strip_headers False
         splitter = MarkdownHeaderTextSplitter(
@@ -283,7 +375,7 @@ class HeaderSplitter(BaseSplitter):
             strip_headers=not self.group_header_with_content,
         )
 
-        docs = splitter.split_text(text) if has_headers else []
+        docs: list[str] = splitter.split_text(text) if has_headers else []
         # Fallback if no headers were found
         if not docs:
             rc = RecursiveCharacterTextSplitter(
