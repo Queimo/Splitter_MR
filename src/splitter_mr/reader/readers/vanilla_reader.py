@@ -17,13 +17,16 @@ from ...model import BaseVisionModel
 from ...schema import (
     DEFAULT_IMAGE_CAPTION_PROMPT,
     DEFAULT_IMAGE_EXTRACTION_PROMPT,
+    DEFAULT_IMAGE_PLACEHOLDER,
+    DEFAULT_PAGE_PLACEHOLDER,
     SUPPORTED_PROGRAMMING_LANGUAGES,
     SUPPORTED_VANILLA_IMAGE_EXTENSIONS,
+    VANILLA_TXT_FILES_EXTENSIONS,
     ReaderOutput,
 )
 from ..base_reader import BaseReader
 from ..utils import PDFPlumberReader
-from ..utils.html_to_markdown import HtmlToMarkdown  # <-- NEW: project converter
+from ..utils.html_to_markdown import HtmlToMarkdown
 
 
 class VanillaReader(BaseReader):
@@ -140,7 +143,7 @@ class VanillaReader(BaseReader):
             source_type, source_val, kwargs
         )
 
-        page_ph: str = kwargs.get("page_placeholder", "<!-- page -->")
+        page_ph: str = kwargs.get("page_placeholder", DEFAULT_PAGE_PLACEHOLDER)
         page_ph_out = self._surface_page_placeholder(
             scan=bool(kwargs.get("scan_pdf_pages")),
             placeholder=page_ph,
@@ -214,7 +217,7 @@ class VanillaReader(BaseReader):
                 path_str, html_to_markdown=bool(kw.get("html_to_markdown", False))
             )
             return doc_name, rel_path, content, conv, None
-        if ext in ("json", "txt", "xml", "csv", "tsv", "md", "markdown"):
+        if ext in VANILLA_TXT_FILES_EXTENSIONS:
             return doc_name, rel_path, _read_text_file(path_str, ext), ext, None
         if ext == "parquet":
             parquet_engine = kw.get(
@@ -368,8 +371,8 @@ class VanillaReader(BaseReader):
             model=kw.get("model", self.model),
             prompt=kw.get("prompt") or DEFAULT_IMAGE_CAPTION_PROMPT,
             show_base64_images=kw.get("show_base64_images", False),
-            image_placeholder=kw.get("image_placeholder", "<!-- image -->"),
-            page_placeholder=kw.get("page_placeholder", "<!-- page -->"),
+            image_placeholder=kw.get("image_placeholder", DEFAULT_IMAGE_PLACEHOLDER),
+            page_placeholder=kw.get("page_placeholder", DEFAULT_PAGE_PLACEHOLDER),
         )
         ocr_name = (
             (kw.get("model") or self.model).model_name
@@ -393,7 +396,7 @@ class VanillaReader(BaseReader):
         Returns:
             str: A string containing page descriptions separated by page placeholders.
         """
-        page_ph = kw.get("page_placeholder", "<!-- page -->")
+        page_ph = kw.get("page_placeholder", DEFAULT_PAGE_PLACEHOLDER)
         pages = self.pdf_reader.describe_pages(
             file_path=file_path,
             model=model,

@@ -5,7 +5,10 @@ from typing import Any, Optional
 from openai import Client
 
 from ...schema import (
+    DEFAULT_GROK_ENDPOINT,
+    DEFAULT_GROK_VISION_MODEL,
     DEFAULT_IMAGE_CAPTION_PROMPT,
+    DEFAULT_IMAGE_EXTENSION,
     GROK_MIME_BY_EXTENSION,
     SUPPORTED_GROK_MIME_TYPES,
     OpenAIClientImageContent,
@@ -28,7 +31,7 @@ class GrokVisionModel(BaseVisionModel):
     def __init__(
         self,
         api_key: Optional[str] = os.getenv("XAI_API_KEY"),
-        model_name: str = os.getenv("XAI_MODEL", "grok-4"),
+        model_name: str = os.getenv("XAI_MODEL", DEFAULT_GROK_VISION_MODEL),
     ) -> None:
         """
         Initializes the GrokVisionModel.
@@ -44,7 +47,7 @@ class GrokVisionModel(BaseVisionModel):
                 from environment variables.
         """
         api_key = api_key or os.getenv("XAI_API_KEY")
-        model_name = model_name or os.getenv("XAI_MODEL") or "grok-4"
+        model_name = model_name or os.getenv("XAI_MODEL") or DEFAULT_GROK_VISION_MODEL
 
         if not api_key:
             raise ValueError(
@@ -54,7 +57,7 @@ class GrokVisionModel(BaseVisionModel):
         self.model_name = model_name
         self.client = Client(
             api_key=api_key,
-            base_url="https://api.x.ai/v1",
+            base_url=DEFAULT_GROK_ENDPOINT,
         )  # TODO: Change to xAI SDK
 
     def get_client(self) -> Client:
@@ -71,7 +74,7 @@ class GrokVisionModel(BaseVisionModel):
         file: Optional[bytes],
         prompt: Optional[str] = None,
         *,
-        file_ext: Optional[str] = "png",
+        file_ext: Optional[str] = DEFAULT_IMAGE_EXTENSION,
         detail: str = "auto",
         **parameters: Any,
     ) -> str:
@@ -119,9 +122,9 @@ class GrokVisionModel(BaseVisionModel):
         if file is None:
             raise ValueError("No file content provided for text extraction.")
 
-        ext = (file_ext or "png").lower()
+        ext = (file_ext or DEFAULT_IMAGE_EXTENSION).lower()
         mime_type = (
-            GROK_MIME_BY_EXTENSION.get(ext)  # noqa: W503
+            GROK_MIME_BY_EXTENSION.get(ext)
             or mimetypes.types_map.get(f".{ext}")  # noqa: W503
             or "image/png"  # noqa: W503
         )

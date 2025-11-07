@@ -1,11 +1,13 @@
 import copy
-from typing import List, Optional
+from typing import Final, List, Optional
 
 from bs4 import BeautifulSoup
 
 from ...reader.utils.html_to_markdown import HtmlToMarkdown
-from ...schema import ReaderOutput, SplitterOutput
+from ...schema import TABLE_CHILDREN, ReaderOutput, SplitterOutput
 from ..base_splitter import BaseSplitter
+
+HTML_PARSER: Final[str] = "html.parser"
 
 
 class HTMLTagSplitter(BaseSplitter):
@@ -16,31 +18,6 @@ class HTMLTagSplitter(BaseSplitter):
     Behavior:
       - When `tag` is specified (e.g., tag="div"), finds all matching elements.
       - When `tag` is None, splits by the most frequent and shallowest tag.
-
-    Args:
-        chunk_size (int): Maximum chunk size in characters (only used when `batch=True`).
-        tag (str | None): HTML tag to split on. If None, auto-detects the best tag.
-        batch (bool): If True (default), groups multiple tags into a chunk, not exceeding `chunk_size`.
-            If False, returns one chunk per tag, ignoring chunk_size.
-        to_markdown (bool): If True, converts each chunk to Markdown using HtmlToMarkdown.
-
-    Example:
-        >>> reader_output = ReaderOutput(text="<div>A</div><div>B</div>")
-        >>> splitter = HTMLTagSplitter(tag="div", batch=False)
-        >>> splitter.split(reader_output).chunks
-        ['<html><body><div>A</div></body></html>', '<html><body><div>B</div></body></html>']
-        >>> splitter = HTMLTagSplitter(tag="div", batch=True, chunk_size=100)
-        >>> splitter.split(reader_output).chunks
-        ['<html><body><div>A</div><div>B</div></body></html>']
-        >>> splitter = HTMLTagSplitter(tag="div", batch=False, to_markdown=True)
-        >>> splitter.split(reader_output).chunks
-        ['A', 'B']
-
-    Attributes:
-        chunk_size (int): Maximum chunk size.
-        tag (Optional[str]): Tag to split on.
-        batch (bool): Whether to group elements into chunks.
-        to_markdown (bool): Whether to convert each chunk to Markdown.
     """
 
     def __init__(
@@ -87,36 +64,39 @@ class HTMLTagSplitter(BaseSplitter):
 
         Returns:
             SplitterOutput
+
+        Example:
+            ```python
+            reader_output = ReaderOutput(text="<div>A</div><div>B</div>")
+            splitter = HTMLTagSplitter(tag="div", batch=False)
+            splitter.split(reader_output).chunks
+            ```
+            ```python
+            ['<html><body><div>A</div></body></html>', '<html><body><div>B</div></body></html>']
+            ```
+            ```python
+            splitter = HTMLTagSplitter(tag="div", batch=True, chunk_size=100)
+            print(splitter.split(reader_output).chunks)
+            ```
+            ['<html><body><div>A</div><div>B</div></body></html>']
+            ```python
+            splitter = HTMLTagSplitter(tag="div", batch=False, to_markdown=True)
+            print(splitter.split(reader_output).chunks)
+            ```
+            ```python
+            ['A', 'B']
+            ```
+
+        Attributes:
+            chunk_size (int): Maximum chunk size.
+            tag (Optional[str]): Tag to split on.
+            batch (bool): Whether to group elements into chunks.
+            to_markdown (bool): Whether to convert each chunk to Markdown.
         """
-        html = getattr(reader_output, "text", "") or ""
-        soup = BeautifulSoup(html, "html.parser")
-        tag = self.tag or self._auto_tag(soup)
 
-        # Locate elements for the chosen tag.
-        try:
-            elements = soup.find_all(tag)
-            table_children = {"tr", "thead", "tbody", "th", "td"}
-            # Only escalate to table when batching is enabled. For non-batch,
-            # keep the exact tag so we can emit one chunk per element.
-            if self.batch and tag in table_children:
-                seen = set()
-                parent_tables = []
-                for el in elements:
-                    table = el.find_parent("table")
-                    if table and id(table) not in seen:
-                        seen.add(id(table))
-                        parent_tables.append(table)
-                if parent_tables:
-                    elements = parent_tables
-                    tag = "table"
-        except Exception:
-            elements = []
-
-        # -------- helpers -------- #
-
-        def build_doc_with_children(children: List) -> str:
+        def _build_doc_with_children(children: List) -> str:
             """Wrap a list of top-level nodes into <html><body>…</body></html>."""
-            doc = BeautifulSoup("", "html.parser")
+            doc = BeautifulSoup("", HTML_PARSER)
             html_tag = doc.new_tag("html")
             body_tag = doc.new_tag("body")
             html_tag.append(body_tag)
@@ -125,7 +105,7 @@ class HTMLTagSplitter(BaseSplitter):
                 body_tag.append(copy.deepcopy(c))
             return str(doc)
 
-        def extract_table_header_and_rows(table_tag):
+        def _extract_table_header_and_rows(table_tag):
             """
             Return (header_thead, data_rows, header_row_src) where:
             - header_thead is a <thead> (deep-copied) or None
@@ -146,7 +126,7 @@ class HTMLTagSplitter(BaseSplitter):
             first_tr = table_tag.find("tr")
             header_thead = None
             if first_tr is not None:
-                tmp = BeautifulSoup("", "html.parser")
+                tmp = BeautifulSoup("", HTML_PARSER)
                 thead = tmp.new_tag("thead")
                 thead.append(copy.deepcopy(first_tr))
                 header_thead = thead
@@ -162,15 +142,15 @@ class HTMLTagSplitter(BaseSplitter):
 
             return header_thead, data_rows, header_row_src
 
-        def build_table_chunk(table_tag, rows_subset: List) -> str:
+        def _build_table_chunk(table_tag, rows_subset: List) -> str:
             """
             Build a <html><body><table>… chunk with:
             - original table attributes
             - a <thead> (original or synthesized)
             - a <tbody> containing rows_subset
             """
-            header_thead, _, _ = extract_table_header_and_rows(table_tag)
-            doc = BeautifulSoup("", "html.parser")
+            header_thead, _, _ = _extract_table_header_and_rows(table_tag)
+            doc = BeautifulSoup("", HTML_PARSER)
             html_tag = doc.new_tag("html")
             body_tag = doc.new_tag("body")
             html_tag.append(body_tag)
@@ -188,6 +168,29 @@ class HTMLTagSplitter(BaseSplitter):
             body_tag.append(new_table)
             return str(doc)
 
+        html = getattr(reader_output, "text", "") or ""
+        soup = BeautifulSoup(html, HTML_PARSER)
+        tag = self.tag or self._auto_tag(soup)
+
+        # Locate elements for the chosen tag.
+        try:
+            elements = soup.find_all(tag)
+            # Only escalate to table when batching is enabled. For non-batch,
+            # keep the exact tag so we can emit one chunk per element.
+            if self.batch and tag in TABLE_CHILDREN:
+                seen = set()
+                parent_tables = []
+                for el in elements:
+                    table = el.find_parent("table")
+                    if table and id(table) not in seen:
+                        seen.add(id(table))
+                        parent_tables.append(table)
+                if parent_tables:
+                    elements = parent_tables
+                    tag = "table"
+        except Exception:
+            elements = []
+
         # -------- main chunking -------- #
 
         chunks: List[str] = []
@@ -196,77 +199,74 @@ class HTMLTagSplitter(BaseSplitter):
             # TABLES: custom batching
             if not self.batch:
                 # one chunk per table (full)
-                chunks = [build_doc_with_children([el]) for el in elements]
+                chunks = [_build_doc_with_children([el]) for el in elements]
 
             elif self.chunk_size in (0, 1, None):
                 # all tables together
-                chunks = [build_doc_with_children(elements)] if elements else [""]
+                chunks = [_build_doc_with_children(elements)] if elements else [""]
 
             else:
                 # batch rows within each table
                 for table_el in elements:
-                    header_thead, rows, _ = extract_table_header_and_rows(table_el)
+                    header_thead, rows, _ = _extract_table_header_and_rows(table_el)
                     if not rows:
-                        chunks.append(build_doc_with_children([table_el]))
+                        chunks.append(_build_doc_with_children([table_el]))
                         continue
 
                     buf: List = []
                     for row in rows:
                         test_buf = buf + [row]
-                        test_html = build_table_chunk(table_el, test_buf)
+                        test_html = _build_table_chunk(table_el, test_buf)
                         if len(test_html) > self.chunk_size and buf:
-                            chunks.append(build_table_chunk(table_el, buf))
+                            chunks.append(_build_table_chunk(table_el, buf))
                             buf = [row]
                         else:
                             buf = test_buf
                     if buf:
-                        chunks.append(build_table_chunk(table_el, buf))
+                        chunks.append(_build_table_chunk(table_el, buf))
 
         else:
-            # NON-TABLE (including table children when batch=False)
-            table_children = {"tr", "thead", "tbody", "th", "td"}
-
             if not self.batch:
-                if tag in table_children:
+                if tag in TABLE_CHILDREN:
                     # one chunk per row-like element, but keep header context
                     for el in elements:
                         table_el = el.find_parent("table")
                         if not table_el:
                             # Fallback: wrap the element as-is
-                            chunks.append(build_doc_with_children([el]))
+                            chunks.append(_build_doc_with_children([el]))
                             continue
                         # skip header-only rows
                         if el.name == "tr" and el.find_parent("thead") is not None:
                             continue
                         if el.name in {"thead", "th"}:
                             continue
-                        chunks.append(build_table_chunk(table_el, [el]))
+                        chunks.append(_build_table_chunk(table_el, [el]))
                 else:
                     for el in elements:
-                        chunks.append(build_doc_with_children([el]))
+                        chunks.append(_build_doc_with_children([el]))
 
             elif self.chunk_size in (0, 1, None):
-                chunks = [build_doc_with_children(elements)] if elements else [""]
+                chunks = [_build_doc_with_children(elements)] if elements else [""]
 
             else:
                 buffer = []
                 for el in elements:
                     test_buffer = buffer + [el]
-                    test_chunk_str = build_doc_with_children(test_buffer)
+                    test_chunk_str = _build_doc_with_children(test_buffer)
                     if len(test_chunk_str) > self.chunk_size and buffer:
-                        chunks.append(build_doc_with_children(buffer))
+                        chunks.append(_build_doc_with_children(buffer))
                         buffer = [el]
                     else:
                         buffer = test_buffer
                 if buffer:
-                    chunks.append(build_doc_with_children(buffer))
+                    chunks.append(_build_doc_with_children(buffer))
 
         if not chunks:
-            chunks = [""]
+            chunks: list[str] = [""]
 
         if self.to_markdown:
-            md = HtmlToMarkdown()
-            chunks = [md.convert(chunk) for chunk in chunks]
+            md: str = HtmlToMarkdown()
+            chunks: list[str] = [md.convert(chunk) for chunk in chunks]
 
         chunk_ids = self._generate_chunk_ids(len(chunks))
         return SplitterOutput(
@@ -287,6 +287,8 @@ class HTMLTagSplitter(BaseSplitter):
             },
             metadata=self._default_metadata(),
         )
+
+    # ---- Helpers ---- #
 
     def _auto_tag(self, soup: BeautifulSoup) -> str:
         """

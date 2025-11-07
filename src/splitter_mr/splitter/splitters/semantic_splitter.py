@@ -227,18 +227,98 @@ class SemanticSplitter(BaseSplitter):
     # ---------- Public API ----------
 
     def split(self, reader_output: ReaderOutput) -> SplitterOutput:
-        """Split the document text into semantically coherent chunks.
+        """
+        Split the document text into semantically coherent chunks.
+
+        This method uses sentence embeddings to find semantic breakpoints.
+        Sentences are embedded in overlapping windows (controlled by `buffer_size`),
+        then cosine distances between consecutive windows are used to detect topic
+        shifts. Breakpoints are determined using either a threshold strategy
+        (percentile, std-dev, IQR, gradient) or by targeting a number of chunks.
 
         Args:
-            reader_output (ReaderOutput): The document text & metadata.
+            reader_output (ReaderOutput): Input text and associated metadata.
 
         Returns:
-            SplitterOutput: Chunks, IDs, metadata, and splitter configuration.
+            SplitterOutput: Structured splitter output containing:
+                * ``chunks`` — list of semantically grouped text segments.
+                * ``chunk_id`` — corresponding unique identifiers.
+                * document metadata and splitter parameters.
+
+        Raises:
+            ValueError: If the provided text is empty or None.
 
         Notes:
-            - With 1 sentence (or 2 in gradient mode), returns the text/sentences as-is.
-            - Chunks shorter than `chunk_size` (minimum) are skipped and merged forward.
-            - `chunk_size` behaves as the *minimum* chunk size in this splitter.
+            - With a single sentence (or 2 in gradient mode), returns text as-is.
+            - ``chunk_size`` acts as the *minimum* allowed chunk size; small
+            segments are merged forward.
+            - The `buffer_size` defines how much contextual overlap each sentence
+            has for embedding (e.g., 1 = one sentence on either side).
+
+        Example:
+            Using a mock embedding model to semantically chunk text:
+
+            ```python
+            from splitter_mr.splitter import SemanticSplitter
+            from splitter_mr.schema.models import ReaderOutput
+            from splitter_mr.embedding.mock_embedding import MockEmbedding  # simple stand-in
+
+            # Example document
+            text = (
+                "Artificial intelligence is transforming industries. "
+                "Machine learning enables new capabilities. "
+                "However, data quality remains a challenge. "
+                "In healthcare, AI assists diagnosis. "
+                "In finance, it improves fraud detection."
+            )
+
+            # Build the ReaderOutput object
+            reader_output = ReaderOutput(
+                text=text,
+                document_name="semantic_example.txt",
+                document_path="/tmp/semantic_example.txt"
+            )
+
+            # Create the splitter with a mock embedding backend
+            embedding = MockEmbedding()  # implements embed_documents()
+            splitter = SemanticSplitter(
+                embedding=embedding,
+                buffer_size=1,                           # look at ±1 sentence context
+                breakpoint_threshold_type="percentile",  # choose top semantic jumps
+                breakpoint_threshold_amount=95.0,        # 95th percentile cutoff
+                chunk_size=50                            # minimum characters per chunk
+            )
+
+            # Perform the split
+            output = splitter.split(reader_output)
+
+            # Examine results
+            print(output.chunks)
+            ```
+            Example output (simplified):
+            ```python
+            [
+                "Artificial intelligence is transforming industries. "
+                "Machine learning enables new capabilities.",
+                "However, data quality remains a challenge. "
+                "In healthcare, AI assists diagnosis.",
+                "In finance, it improves fraud detection."
+            ]
+            ```
+
+            You can also target a specific number of chunks instead of using a
+            fixed percentile:
+
+            ```python
+            splitter = SemanticSplitter(
+                embedding=embedding,
+                buffer_size=1,
+                number_of_chunks=3,    # try to produce 3 chunks
+                chunk_size=50
+            )
+            output = splitter.split(reader_output)
+            print(output.chunks)
+            ```
         """
         text = reader_output.text
         if text == "" or text is None:

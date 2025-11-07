@@ -247,6 +247,7 @@ class RowColumnSplitter(BaseSplitter):
         """
         text = reader_output.text
         # Return a void dataframe is a empty file is provided
+        # TODO: Substitute this code to follow a factory/mapping pattern
         if not text or not text.strip():
             return pd.DataFrame()
         method = reader_output.conversion_method

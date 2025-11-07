@@ -1,5 +1,7 @@
+# header_splitter.py
+
 import re
-from typing import List, Optional, Tuple
+from typing import List, Optional, Sequence, Tuple, cast
 
 from bs4 import BeautifulSoup
 from langchain_text_splitters import (
@@ -7,14 +9,16 @@ from langchain_text_splitters import (
     RecursiveCharacterTextSplitter,
 )
 
+from splitter_mr.schema.constants import ALLOWED_HEADERS
+from splitter_mr.schema.constants import ALLOWED_HEADERS_LITERAL as HeaderName
+
 from ...reader.utils import HtmlToMarkdown
 from ...schema import ReaderOutput, SplitterOutput
 from ..base_splitter import BaseSplitter
 
 
 class HeaderSplitter(BaseSplitter):
-    """
-    Split HTML or Markdown documents into chunks by header levels (H1–H6).
+    """Split HTML or Markdown documents into chunks by header levels (H1–H6).
 
     - If the input looks like HTML, it is first converted to Markdown using the
       project's HtmlToMarkdown utility, which emits ATX-style headings (`#`, `##`, ...).
@@ -26,60 +30,83 @@ class HeaderSplitter(BaseSplitter):
       excessively large chunk.
 
     Args:
-        chunk_size (int, optional): Size hint for fallback splitting; not used by
-            header splitting itself. Defaults to 1000.
-        headers_to_split_on (Optional[List[str]]): Semantic header names like
-            ["Header 1", "Header 2"]. If None, all levels 1–6 are enabled.
-        group_header_with_content (bool, optional): If True (default), headers are
-            kept with their following content (strip_headers=False). If False,
-            headers are stripped from chunks (strip_headers=True).
-
-    Example:
-        ```python
-        from splitter_mr.splitter import HeaderSplitter
-
-        splitter = HeaderSplitter(headers_to_split_on=["Header 1", "Header 2", "Header 3"])
-        output = splitter.split(reader_output)  # reader_output.text may be HTML or MD
-        for idx, chunk in enumerate(output.chunks):
-            print(f"--- Chunk {idx+1} ---")
-            print(chunk)
-        ```
+        chunk_size: Size hint for fallback splitting; not used by header splitting itself.
+        headers_to_split_on: Semantic header names like ``("Header 1", "Header 2")``.
+            If ``None`` (default), all allowed headers are enabled (``ALLOWED_HEADERS``).
+        group_header_with_content: If ``True`` (default), headers are kept with their
+            following content (``strip_headers=False``). If ``False``, headers are removed
+            from the chunks (``strip_headers=True``).
     """
 
     def __init__(
         self,
         chunk_size: int = 1000,
-        headers_to_split_on: Optional[List[str]] = None,
+        headers_to_split_on: Optional[Sequence[HeaderName]] = None,
         *,
         group_header_with_content: bool = True,
     ):
-        """
-        Initialize the HeaderSplitter.
+        """Initialize the HeaderSplitter.
 
         Args:
-            chunk_size (int): Used by fallback character splitter if no headers are found.
-            headers_to_split_on (Optional[List[str]]): Semantic headers, e.g. ["Header 1", "Header 2"].
-                Defaults to all levels 1–6.
-            group_header_with_content (bool): Keep headers attached to following content if True.
+            chunk_size: Used by the fallback character splitter if no headers are found.
+            headers_to_split_on: Semantic headers, e.g., ``("Header 1", "Header 2")``.
+                Defaults to all allowed levels defined in ``ALLOWED_HEADERS``.
+            group_header_with_content: Keep headers attached to following content if ``True``.
+
+        Raises:
+            ValueError: If any provided header is not in ``ALLOWED_HEADERS``.
         """
         super().__init__(chunk_size)
-        # Default to all 6 levels for robust splitting unless caller narrows it.
-        self.headers_to_split_on = headers_to_split_on or [
-            f"Header {i}" for i in range(1, 7)
-        ]
+
+        # Use immutable default and validate any user-supplied values.
+        if headers_to_split_on is None:
+            safe_headers: Tuple[HeaderName, ...] = cast(
+                Tuple[HeaderName, ...], ALLOWED_HEADERS
+            )
+        else:
+            safe_headers = self._validate_headers(headers_to_split_on)
+
+        self.headers_to_split_on: Tuple[HeaderName, ...] = safe_headers
         self.group_header_with_content = bool(group_header_with_content)
 
-    def _make_tuples(self, filetype: str) -> List[Tuple[str, str]]:
-        """
-        Convert semantic header names (e.g., "Header 2") into Markdown tokens.
+    # ---- Helpers ---- #
+
+    @staticmethod
+    def _validate_headers(headers: Sequence[str]) -> Tuple[HeaderName, ...]:
+        """Validate that headers are a subset of ALLOWED_HEADERS and return an immutable tuple.
 
         Args:
-            filetype (str): Only "md" is supported (HTML is converted to MD first).
+            headers: Proposed list/tuple of header names.
 
         Returns:
-            List[Tuple[str, str]]: Tuples of (header_token, semantic_name), e.g. ("##", "Header 2").
+            A tuple of validated header names.
+
+        Raises:
+            ValueError: If any header is not present in ``ALLOWED_HEADERS``.
         """
-        tuples: List[Tuple[str, str]] = []
+        invalid: list = [h for h in headers if h not in ALLOWED_HEADERS]
+        if invalid:
+            allowed_display: str = ", ".join(ALLOWED_HEADERS)
+            bad_display: str = ", ".join(invalid)
+            raise ValueError(
+                f"Invalid headers: [{bad_display}]. Allowed values are: [{allowed_display}]."
+            )
+        # Preserve caller order but store immutably.
+        return cast(Tuple[HeaderName, ...], tuple(headers))
+
+    def _make_tuples(self, filetype: str) -> List[Tuple[str, str]]:
+        """Convert semantic header names (e.g., ``"Header 2"``) into Markdown tokens.
+
+        Args:
+            filetype: Only ``"md"`` is supported (HTML is converted to MD first).
+
+        Returns:
+            Tuples of ``(header_token, semantic_name)``, e.g., ``("##", "Header 2")``.
+
+        Raises:
+            ValueError: If an unsupported filetype is provided.
+        """
+        tuples: list[tuple[str, str]] = []
         for header in self.headers_to_split_on:
             lvl = self._header_level(header)
             if filetype == "md":
@@ -90,23 +117,34 @@ class HeaderSplitter(BaseSplitter):
 
     @staticmethod
     def _header_level(header: str) -> int:
-        """
-        Extract numeric level from a header name like "Header 2".
+        """Extract numeric level from a header name like ``"Header 2"``.
+
+        Args:
+            header: The header label.
+
+        Returns:
+            The numeric level extracted from the header label.
 
         Raises:
             ValueError: If the header string is not of the expected form.
         """
-        m = re.match(r"header\s*(\d+)", header.lower())
+        m: str | None = re.match(r"header\s*(\d+)", header.lower())
         if not m:
             raise ValueError(f"Invalid header: {header}")
         return int(m.group(1))
 
     @staticmethod
     def _guess_filetype(reader_output: ReaderOutput) -> str:
-        """
-        Heuristically determine whether the input is HTML or Markdown.
+        """Heuristically determine whether the input is HTML or Markdown.
 
-        Checks filename extensions first, then looks for HTML elements as a hint.
+        The method first checks the filename extension, then uses lightweight HTML
+        detection via BeautifulSoup as a fallback.
+
+        Args:
+            reader_output: The input document and metadata.
+
+        Returns:
+            ``"html"`` if the text appears to be HTML, otherwise ``"md"``.
         """
         name = (reader_output.document_name or "").lower()
         if name.endswith((".html", ".htm")):
@@ -121,11 +159,17 @@ class HeaderSplitter(BaseSplitter):
 
     @staticmethod
     def _normalize_setext(md_text: str) -> str:
-        """
-        Normalize Setext-style headings to ATX so MarkdownHeaderTextSplitter can detect them.
+        """Normalize Setext-style headings to ATX so MarkdownHeaderTextSplitter can detect them.
 
-        H1:  Title\\n====  →  # Title
-        H2:  Title\\n----  →  ## Title
+        Transformations:
+            - ``H1:  Title\\n====  →  # Title``
+            - ``H2:  Title\\n----  →  ## Title``
+
+        Args:
+            md_text: Raw Markdown text possibly containing Setext headings.
+
+        Returns:
+            Markdown text with Setext headings rewritten as ATX headings.
         """
         # H1 underlines
         md_text = re.sub(r"^(?P<t>[^\n]+)\n=+\s*$", r"# \g<t>", md_text, flags=re.M)
@@ -133,24 +177,94 @@ class HeaderSplitter(BaseSplitter):
         md_text = re.sub(r"^(?P<t>[^\n]+)\n-+\s*$", r"## \g<t>", md_text, flags=re.M)
         return md_text
 
+    # ---- Main method ---- #
+
     def split(self, reader_output: ReaderOutput) -> SplitterOutput:
         """
         Perform header-based splitting with HTML→Markdown conversion and safe fallback.
 
         Steps:
-          1) Detect filetype (HTML/MD).
-          2) If HTML, convert to Markdown with HtmlToMarkdown (emits ATX headings).
-          3) If Markdown, normalize Setext headings to ATX.
-          4) Split by headers via MarkdownHeaderTextSplitter.
-          5) If no headers found, fallback to RecursiveCharacterTextSplitter.
+            1. Detect filetype (HTML/MD).
+            2. If HTML, convert to Markdown with HtmlToMarkdown (emits ATX headings).
+            3. If Markdown, normalize Setext headings to ATX.
+            4. Split by headers via MarkdownHeaderTextSplitter.
+            5. If no headers found, fallback to RecursiveCharacterTextSplitter.
+
+        Args:
+            reader_output: The reader output containing text and metadata.
+
+        Returns:
+            SplitterOutput: A populated splitter output with chunk contents and metadata.
+
+        Raises:
+            ValueError: If ``reader_output.text`` is empty.
+
+        Example:
+            Basic Markdown input with default headers (H1–H6), keeping headers with content:
+
+            ```python
+            from splitter_mr.splitter import HeaderSplitter
+            from splitter_mr.schema.models import ReaderOutput
+
+            md = (
+                "# Title\\n"
+                "Intro paragraph.\\n\\n"
+                "## Section A\\n"
+                "Content A.\\n\\n"
+                "## Section B\\n"
+                "Content B."
+            )
+            ro = ReaderOutput(text=md, document_name="example.md")
+
+            splitter = HeaderSplitter(group_header_with_content=True)  # keep headers in chunks
+            out = splitter.split(ro)
+            print(out.chunks)
+            ```
+            Possible output (simplified):
+            ```python
+            [
+                "# Title\\nIntro paragraph.",
+                "## Section A\\nContent A.",
+                "## Section B\\nContent B."
+            ]
+            ```
+
+            HTML input with a restricted set of headers and stripping headers from chunks:
+
+            ```python
+            html = (
+                "<h1>Title</h1>"
+                "<p>Intro paragraph.</p>"
+                "<h2>Section A</h2>"
+                "<p>Content A.</p>"
+                "<h3>Sub A.1</h3>"
+                "<p>Detail A.1</p>"
+            )
+            ro = ReaderOutput(text=html, document_name="example.html")
+
+            # Only split on Header 1 and Header 2 (i.e., H1/H2)
+            splitter = HeaderSplitter(
+                headers_to_split_on=("Header 1", "Header 2"),
+                group_header_with_content=False  # drop headers from chunks
+            )
+            out = splitter.split(ro)
+            print(out.chunks)
+            ```
+            Possible output (simplified):
+            ```python
+            [
+                "Intro paragraph.",
+                "Content A.\\nSub A.1\\nDetail A.1"
+            ]
+            ```
         """
         if not reader_output.text:
             raise ValueError("reader_output.text is empty or None")
 
-        filetype = self._guess_filetype(reader_output)
-        tuples = self._make_tuples("md")  # Always work in Markdown space.
+        filetype: str = self._guess_filetype(reader_output)
+        tuples: list[tuple] = self._make_tuples("md")
 
-        text = reader_output.text
+        text: str = reader_output.text
 
         # HTML → Markdown using the project's converter
         if filetype == "html":
@@ -178,7 +292,7 @@ class HeaderSplitter(BaseSplitter):
             )
             docs = rc.create_documents([text])
 
-        chunks = [doc.page_content for doc in docs]
+        chunks: list = [doc.page_content for doc in docs]
 
         return SplitterOutput(
             chunks=chunks,
@@ -191,7 +305,7 @@ class HeaderSplitter(BaseSplitter):
             ocr_method=reader_output.ocr_method,
             split_method="header_splitter",
             split_params={
-                "headers_to_split_on": self.headers_to_split_on,
+                "headers_to_split_on": list(self.headers_to_split_on),
                 "group_header_with_content": self.group_header_with_content,
             },
             metadata=self._default_metadata(),
