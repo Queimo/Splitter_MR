@@ -1,20 +1,68 @@
+# -------------------------------- #
+# ------------ Reader ------------ #
+# -------------------------------- #
+
+# ---- Base Warning ---- #
+
+
+class BaseReaderWarning(UserWarning):
+    """
+    Base Warning class to all Reader exceptions
+    """
+
+    pass
+
+
+class FiletypeAmbiguityWarning(BaseReaderWarning):
+    """
+    Warned when filetype heuristics disagree (extension vs DOM sniff).
+    """
+
+
 # ---------------------------------- #
 # ------------ Splitter ------------ #
 # ---------------------------------- #
 
+# ---- Base Warning ---- #
 
-class SplitterInputWarning(UserWarning):
+
+class BaseSplitterWarning(UserWarning):
+    """
+    Base Warning class to all Reader exceptions
+    """
+
+    pass
+
+
+# ---- General Warnings ---- #
+
+
+class SplitterInputWarning(BaseSplitterWarning):
     """
     Warning raised when the splitter input is suspicious (e.g., empty text or
     text expected to be JSON but not parseable as JSON).
     """
 
-    pass
 
-
-class FiletypeAmbiguityWarning(UserWarning):
+class SplitterOutputWarning(BaseSplitterWarning):
     """
-    Warned when filetype heuristics disagree (extension vs DOM sniff).
+    Warning raised when the splitter output present suspicious elements (e.g.,
+    empty text or text expected to be JSON but not parseable as JSON).
     """
 
-    pass
+
+# ---- HTMLTagSplitter ---- #
+
+
+class AutoTagFallbackWarning(SplitterInputWarning):
+    """
+    Warned when HTML Tag Splitter performs auto tagging, e.g., when
+    not finding a tag or when no tag is provided.
+    """
+
+
+class BatchHtmlTableWarning(SplitterInputWarning):
+    """
+    Warned when a tag is presented in a table and the splitting process is being
+    produced on batch. In that case, it is splitted by table.
+    """

@@ -153,7 +153,7 @@ def test_html_conversion_and_split(monkeypatch, html_reader_output):
 
 
 def test_value_error_on_bad_semantic_header(markdown_reader_output):
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidHeaderNameError):
         HeaderSplitter(headers_to_split_on=["NOPE", "Header 2"])
 
 

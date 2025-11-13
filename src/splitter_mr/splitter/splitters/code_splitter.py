@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import json
 import warnings
 from typing import List
@@ -9,8 +7,8 @@ from langchain_text_splitters import Language, RecursiveCharacterTextSplitter
 from ...schema import ReaderOutput, SplitterOutput
 from ...schema.exceptions import (
     InvalidChunkException,
+    SplitterConfigException,
     SplitterOutputException,
-    UnsupportedCodeLanguage,
 )
 from ...schema.warnings import SplitterInputWarning
 from ..base_splitter import BaseSplitter
@@ -27,14 +25,14 @@ def get_langchain_language(lang_str: str) -> Language:
         Language: The corresponding LangChain language enumeration.
 
     Raises:
-        UnsupportedCodeLanguage: If the provided language is not supported
+        SplitterConfigException: If the provided language is not supported
             by the LangChain ``Language`` enum.
     """
     lookup = {lang.name.lower(): lang for lang in Language}
     key = (lang_str or "").lower()
     if key not in lookup:
         supported = ", ".join(sorted(lookup.keys()))
-        raise UnsupportedCodeLanguage(
+        raise SplitterConfigException(
             f"Unsupported language '{lang_str}'. Supported languages: {supported}"
         )
     return lookup[key]
@@ -77,7 +75,7 @@ class CodeSplitter(BaseSplitter):
             ValueError: If ``chunk_size`` is not a positive integer.
         """
         if not isinstance(chunk_size, int) or chunk_size < 1:
-            raise ValueError("chunk_size must be an integer >= 1")
+            raise SplitterConfigException("chunk_size must be an integer >= 1")
         super().__init__(chunk_size)
         self.language = language
 

@@ -1,5 +1,20 @@
 from types import SimpleNamespace
 
+import bs4
+import pytest
+
+from splitter_mr.schema.exceptions import (
+    HtmlConversionError,
+    InvalidHtmlTagError,
+    SplitterConfigException,
+    SplitterOutputException,
+)
+from splitter_mr.schema.warnings import (
+    AutoTagFallbackWarning,
+    BatchHtmlTableWarning,
+    SplitterInputWarning,
+    SplitterOutputWarning,
+)
 from splitter_mr.splitter.splitters.html_tag_splitter import HTMLTagSplitter
 
 # ---- Mocks, fixtures and helpers ---- #
@@ -325,34 +340,6 @@ def test_table_without_rows_emits_table_even_when_batching_rows():
     assert '<table id="empty">' in out.chunks[0]
 
 
-def test_find_all_exception_yields_empty_chunk(monkeypatch):
-    # Make BeautifulSoup.find_all raise to exercise the except branch
-    html = "<html><body><div>A</div></body></html>"
-    ro = make_reader_output(html)
-
-    # Monkeypatch the method on a Soup instance created inside split; we patch bs4.BeautifulSoup.find_all
-    class Boom(Exception):
-        pass
-
-    orig_find_all = None
-
-    import bs4
-
-    orig_find_all = bs4.BeautifulSoup.find_all
-
-    def raiser(self, *args, **kwargs):
-        raise Boom("boom")
-
-    try:
-        bs4.BeautifulSoup.find_all = raiser
-        splitter = HTMLTagSplitter(chunk_size=10000, tag="div", to_markdown=False)
-        out = splitter.split(ro)
-        assert out.chunks == [""]
-    finally:
-        # restore
-        bs4.BeautifulSoup.find_all = orig_find_all
-
-
 def test_auto_tag_same_count_picks_shallowest():
     html = """
     <html><body>
@@ -374,3 +361,132 @@ def test_auto_tag_same_count_picks_shallowest():
     assert out.split_params["tag"] == "p"
     # With batch=False, one chunk per chosen element
     assert len(out.chunks) == 4
+
+
+# ---- Exceptions ---- #
+
+
+def test_init_negative_chunk_size_raises_config_exception():
+    with pytest.raises(SplitterConfigException):
+        HTMLTagSplitter(chunk_size=-1)
+
+
+def test_init_invalid_tag_raises_config_exception():
+    with pytest.raises(SplitterConfigException):
+        HTMLTagSplitter(chunk_size=1, tag="  ")
+
+
+def test_parse_html_failure_raises_html_conversion_error(monkeypatch):
+    # Force BeautifulSoup(...) constructor to explode
+    class Boom(Exception): ...
+
+    def boom_constructor(*args, **kwargs):
+        raise Boom("parse failed")
+
+    monkeypatch.setattr(bs4, "BeautifulSoup", boom_constructor)
+    splitter = HTMLTagSplitter(chunk_size=1, tag="div", to_markdown=False)
+    with pytest.raises(HtmlConversionError):
+        splitter.split(make_reader_output("<html></html>"))
+
+
+def test_find_all_failure_raises_invalid_html_tag_error(monkeypatch):
+    # Force BeautifulSoup.find_all to explode
+    class Boom(Exception): ...
+
+    def raiser(self, *args, **kwargs):
+        raise Boom("find_all failed")
+
+    monkeypatch.setattr(bs4.BeautifulSoup, "find_all", raiser, raising=True)
+    splitter = HTMLTagSplitter(chunk_size=1, tag="div", to_markdown=False)
+    with pytest.raises(InvalidHtmlTagError):
+        splitter.split(make_reader_output("<html><body><div>A</div></body></html>"))
+
+
+def test_emit_result_wraps_errors_as_splitter_output_exception(monkeypatch):
+    # Make _generate_chunk_ids blow up so _emit_result raises SplitterOutputException
+    splitter = HTMLTagSplitter(chunk_size=1, tag="div", to_markdown=False)
+    monkeypatch.setattr(
+        HTMLTagSplitter,
+        "_generate_chunk_ids",
+        lambda self, n: ().throw(RuntimeError("boom")),
+    )
+    with pytest.raises(SplitterOutputException):
+        splitter.split(make_reader_output("<html><body><div>A</div></body></html>"))
+
+
+# ---- Warnings ---- #
+
+
+def test_empty_input_emits_splitter_input_warning_and_returns_empty_chunk():
+    splitter = HTMLTagSplitter(chunk_size=1, tag="div", to_markdown=False)
+    with pytest.warns(SplitterInputWarning):
+        out = splitter.split(make_reader_output("   \n\t"))
+    assert out.chunks == [""]
+
+
+def test_no_elements_emits_autotag_fallback_warning():
+    # tag='aside' doesn't exist in the sample HTML → AutoTagFallbackWarning
+    html = "<html><body><div>A</div></body></html>"
+    splitter = HTMLTagSplitter(chunk_size=1, tag="aside", to_markdown=False)
+    with pytest.warns(AutoTagFallbackWarning):
+        out = splitter.split(make_reader_output(html))
+    # When no elements matched, implementation returns a single empty chunk
+    assert out.chunks == [""]
+
+
+def test_batch_table_children_emits_batch_html_table_warning():
+    # Using tag='tr' with batching should escalate to table and warn
+    html = """
+    <html><body>
+      <table>
+        <thead><tr><th>H</th></tr></thead>
+        <tbody><tr><td>R1</td></tr><tr><td>R2</td></tr></tbody>
+      </table>
+    </body></html>
+    """
+    splitter = HTMLTagSplitter(
+        chunk_size=10000, tag="tr", batch=True, to_markdown=False
+    )
+    with pytest.warns(BatchHtmlTableWarning):
+        out = splitter.split(make_reader_output(html))
+    assert out.split_params["tag"] == "table"
+    assert len(out.chunks) == 1
+
+
+def test_header_only_row_path_triggers_splitter_output_warning_when_no_chunks(
+    monkeypatch,
+):
+    # For batch=False and tag='thead' (or 'th'), we skip header-only elements,
+    # which leads to no chunks; split() should warn and normalize to [""].
+    html = """
+    <html><body>
+      <table>
+        <thead><tr><th>H</th></tr></thead>
+        <tbody><tr><td>R1</td></tr></tbody>
+      </table>
+    </body></html>
+    """
+    splitter = HTMLTagSplitter(
+        chunk_size=1, tag="thead", batch=False, to_markdown=False
+    )
+    with pytest.warns(SplitterOutputWarning):
+        out = splitter.split(make_reader_output(html))
+    assert out.chunks == [""]
+
+
+def test_markdown_conversion_failure_raises_html_conversion_error(monkeypatch):
+    class FakeConv:
+        def convert(self, *_args, **_kwargs):
+            raise RuntimeError("md boom")
+
+    monkeypatch.setattr(
+        "splitter_mr.splitter.splitters.html_tag_splitter.html_to_markdown.HtmlToMarkdown",
+        lambda: FakeConv(),
+    )
+
+    splitter = HTMLTagSplitter(
+        chunk_size=10000, tag="div", batch=True, to_markdown=True
+    )
+
+    with pytest.raises(HtmlConversionError):
+        splitter.split(make_reader_output("<html><body><div>A</div></body></html>"))

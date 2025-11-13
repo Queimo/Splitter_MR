@@ -5,8 +5,8 @@ import pytest
 from splitter_mr.schema import ReaderOutput
 from splitter_mr.schema.exceptions import (
     InvalidChunkException,
+    SplitterConfigException,
     SplitterOutputException,
-    UnsupportedCodeLanguage,
 )
 from splitter_mr.schema.warnings import SplitterInputWarning
 from splitter_mr.splitter import CodeSplitter
@@ -92,7 +92,7 @@ def test_language_is_case_insensitive():
 
 @pytest.mark.parametrize("bad_size", [0, -1, 2.5, "100"])
 def test_invalid_chunk_size_raises_value_error(bad_size):
-    with pytest.raises(ValueError):
+    with pytest.raises(SplitterConfigException):
         CodeSplitter(chunk_size=bad_size, language="python")
 
 
@@ -104,7 +104,7 @@ def test_invalid_chunk_size_raises_value_error(bad_size):
 def test_invalid_language_raises_unsupported_code_language():
     reader = ReaderOutput(text="print('hi')")
     splitter = CodeSplitter(chunk_size=50, language="notalang")
-    with pytest.raises(UnsupportedCodeLanguage, match="Unsupported language"):
+    with pytest.raises(SplitterConfigException, match="Unsupported language"):
         splitter.split(reader)
 
 

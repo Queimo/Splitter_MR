@@ -42,8 +42,10 @@ from .exceptions import (
     HtmlConversionError,
     InvalidChunkException,
     InvalidHeaderNameError,
+    InvalidHtmlTagError,
     NormalizationError,
     ReaderException,
+    SplitterConfigException,
     SplitterException,
     SplitterOutputException,
 )
@@ -60,7 +62,14 @@ from .models import (
     SplitterOutput,
 )
 from .prompts import DEFAULT_IMAGE_CAPTION_PROMPT, DEFAULT_IMAGE_EXTRACTION_PROMPT
-from .warnings import FiletypeAmbiguityWarning, SplitterInputWarning
+from .warnings import (
+    AutoTagFallbackWarning,
+    BaseSplitterWarning,
+    BatchHtmlTableWarning,
+    FiletypeAmbiguityWarning,
+    SplitterInputWarning,
+    SplitterOutputWarning,
+)
 
 __all__ = [
     "BreakpointThresholdType",
@@ -76,14 +85,20 @@ __all__ = [
     "HFChatTextContent",
     "ReaderException",
     "SplitterException",
+    "SplitterConfigException",
     "SplitterOutputException",
     "InvalidChunkException",
     "NormalizationError",
     "HtmlConversionError",
     "InvalidHeaderNameError",
     "HeaderLevelOutOfRangeError",
+    "InvalidHtmlTagError",
     "SplitterInputWarning",
     "FiletypeAmbiguityWarning",
+    "AutoTagFallbackWarning",
+    "BatchHtmlTableWarning",
+    "SplitterOutputWarning",
+    "BaseSplitterWarning",
     "ALLOWED_HEADERS",
     "DEFAULT_ANTHROPIC_ENTRYPOINT",
     "DEFAULT_ANTHROPIC_MODEL",

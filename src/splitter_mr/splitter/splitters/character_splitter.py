@@ -1,7 +1,11 @@
 import json
 import warnings
 
-from ...schema.exceptions import InvalidChunkException, SplitterOutputException
+from ...schema.exceptions import (
+    InvalidChunkException,
+    SplitterConfigException,
+    SplitterOutputException,
+)
 from ...schema.models import ReaderOutput, SplitterOutput
 from ...schema.warnings import SplitterInputWarning
 from ..base_splitter import BaseSplitter
@@ -27,7 +31,7 @@ class CharacterSplitter(BaseSplitter):
             characters between chunks. If float, must be in [0.0, 1.0).
 
     Raises:
-        ValueError: If either ``chunk_size`` or ``chunk_overlap`` are invalid.
+        SplitterConfigException: If either ``chunk_size`` or ``chunk_overlap`` are invalid.
 
     Example:
         ```python
@@ -49,25 +53,30 @@ class CharacterSplitter(BaseSplitter):
 
     def __init__(self, chunk_size: int = 1000, chunk_overlap: int = 0):
         if not isinstance(chunk_size, int) or chunk_size < 1:
-            raise ValueError("chunk_size must be an integer >= 1")
+            raise SplitterConfigException("chunk_size must be an integer >= 1")
 
         if isinstance(chunk_overlap, int):
             if chunk_overlap < 0:
-                raise ValueError("chunk_overlap (int) must be >= 0")
+                raise SplitterConfigException("chunk_overlap (int) must be >= 0")
             if chunk_overlap >= chunk_size:
-                raise ValueError("chunk_overlap (int) must be smaller than chunk_size")
+                raise SplitterConfigException(
+                    "chunk_overlap (int) must be smaller than chunk_size"
+                )
         elif isinstance(chunk_overlap, float):
             if not (0.0 <= chunk_overlap < 1.0):
-                raise ValueError("chunk_overlap (float) must be in [0.0, 1.0)")
+                raise SplitterConfigException(
+                    "chunk_overlap (float) must be in [0.0, 1.0)"
+                )
         else:
-            raise ValueError("chunk_overlap must be int or float")
+            raise SplitterConfigException("chunk_overlap must be int or float")
 
         super().__init__(chunk_size)
         self.chunk_overlap = chunk_overlap
 
     def _coerce_overlap(self, chunk_size: int) -> int:
         """
-        Convert the ``chunk_overlap`` parameter into an absolute number of characters.
+        Convert the ``chunk_overlap`` parameter into an absolute
+        number of characters.
 
         Args:
             chunk_size (int): The configured chunk size.
@@ -83,12 +92,15 @@ class CharacterSplitter(BaseSplitter):
         """
         Validate and warn about potential input issues.
 
-        This helper method emits warnings instead of raising exceptions for the following cases:
+        This helper method emits warnings instead of raising exceptions
+        for the following cases:
           - Empty or whitespace-only text.
-          - Declared JSON input (``conversion_method='json'``) that cannot be parsed as JSON.
+          - Declared JSON input (``conversion_method='json'``) that cannot be
+            parsed as JSON.
 
         Args:
-            reader_output (ReaderOutput): Input reader output containing text and metadata.
+            reader_output (ReaderOutput): Input reader output containing text
+                and metadata.
             text (str): The textual content to check.
 
         Warnings:
@@ -108,7 +120,7 @@ class CharacterSplitter(BaseSplitter):
             except Exception:
                 warnings.warn(
                     SplitterInputWarning(
-                        "ReaderOutput.conversion_method is 'json' but text is not valid JSON. "
+                        "Conversion method is 'json' but text is not valid JSON. "
                         "Proceeding as plain text."
                     )
                 )
@@ -136,8 +148,10 @@ class CharacterSplitter(BaseSplitter):
 
         Raises:
             ValueError: If initialization parameters are invalid.
-            InvalidChunkException: If chunks cannot be properly created (e.g., all empty).
-            SplitterOutputException: If the final SplitterOutput cannot be validated or built.
+            InvalidChunkException: If chunks cannot be properly created
+                (e.g., all empty).
+            SplitterOutputException: If the final SplitterOutput cannot be
+                validated or built.
 
         Warnings:
             SplitterInputWarning: If text is empty or cannot be parsed as JSON.
@@ -157,16 +171,16 @@ class CharacterSplitter(BaseSplitter):
             ['Hello worl', 'world! Thi', 'is is a te', ...]
             ```
         """
-        text = reader_output.text
-        chunk_size = self.chunk_size
+        text: str = reader_output.text
+        chunk_size: int = self.chunk_size
 
         self._check_input(reader_output, text)
 
-        overlap = self._coerce_overlap(chunk_size)
+        overlap: int = self._coerce_overlap(chunk_size)
 
-        chunks = []
-        start = 0
-        step = max(1, chunk_size - overlap)
+        chunks: list = []
+        start: int = 0
+        step: int = max(1, chunk_size - overlap)
 
         try:
             while start < len(text):
@@ -193,8 +207,8 @@ class CharacterSplitter(BaseSplitter):
             ) from e
 
         try:
-            chunk_ids = self._generate_chunk_ids(len(chunks))
-            metadata = self._default_metadata()
+            chunk_ids: list[str] = self._generate_chunk_ids(len(chunks))
+            metadata: dict = self._default_metadata()
             output = SplitterOutput(
                 chunks=chunks,
                 chunk_id=chunk_ids,

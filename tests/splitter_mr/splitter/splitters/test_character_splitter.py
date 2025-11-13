@@ -2,7 +2,11 @@ import warnings
 
 import pytest
 
-from splitter_mr.schema.exceptions import InvalidChunkException, SplitterOutputException
+from splitter_mr.schema.exceptions import (
+    InvalidChunkException,
+    SplitterConfigException,
+    SplitterOutputException,
+)
 from splitter_mr.schema.models import ReaderOutput
 from splitter_mr.schema.warnings import SplitterInputWarning
 from splitter_mr.splitter import CharacterSplitter
@@ -156,8 +160,8 @@ def test_json_declared_valid_no_warning():
         {"chunk_size": 10, "chunk_overlap": "1"},  # wrong type
     ],
 )
-def test_invalid_constructor_params_raise_valueerror(kwargs):
-    with pytest.raises(ValueError):
+def test_invalid_constructor_params_raise_splitter_config_exception(kwargs):
+    with pytest.raises(SplitterConfigException):
         CharacterSplitter(**kwargs)
 
 
