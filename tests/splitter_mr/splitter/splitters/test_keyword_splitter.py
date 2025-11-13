@@ -1,9 +1,17 @@
 import re
+from types import SimpleNamespace
 from typing import List
 
 import pytest
 
-from splitter_mr.schema import ReaderOutput
+from splitter_mr.schema import (
+    InvalidChunkException,
+    ReaderOutput,
+    ReaderOutputException,
+    SplitterConfigException,
+    SplitterInputWarning,
+    SplitterOutputException,
+)
 from splitter_mr.splitter.splitters.keyword_splitter import KeywordSplitter
 
 # ---- Helpers, mocks and fixtures ---- #
@@ -228,3 +236,107 @@ def test_split_both_mode_increases_chunk_count_expected(reader_output: ReaderOut
     out_before = sp_before.split(reader_output)
     out_both = sp_both.split(reader_output)
     assert len(out_both.chunks) >= len(out_before.chunks)
+
+
+# ---- Error handling ---- #
+
+
+def test_init_invalid_chunk_size_raises_splitter_config_exception_expected():
+    with pytest.raises(SplitterConfigException):
+        KeywordSplitter(patterns=[r"X"], chunk_size=0)
+
+
+def test_init_invalid_include_delimiters_raises_splitter_config_exception_expected():
+    with pytest.raises(SplitterConfigException):
+        KeywordSplitter(patterns=[r"X"], include_delimiters="not-a-mode")
+
+
+def test_init_invalid_patterns_type_raises_splitter_config_exception_expected():
+    # patterns must be list or dict
+    with pytest.raises(SplitterConfigException):
+        KeywordSplitter(patterns="not-a-list-or-dict")  # type: ignore[arg-type]
+
+
+def test_init_invalid_regex_raises_splitter_config_exception_expected():
+    # Invalid regex (unbalanced parenthesis) will cause re.error inside __init__
+    bad_patterns = {"bad": r"(?P<bad>unbalanced"}
+    with pytest.raises(SplitterConfigException):
+        KeywordSplitter(patterns=bad_patterns)
+
+
+def test_split_missing_text_attribute_raises_reader_output_exception_expected():
+    sp = KeywordSplitter(patterns=[r"X"], include_delimiters="none")
+    # Object without 'text' attribute
+    bogus = SimpleNamespace(document_name="x", document_path="/tmp/x")
+    with pytest.raises(ReaderOutputException):
+        sp.split(bogus)  # type: ignore[arg-type]
+
+
+def test_split_non_string_text_raises_reader_output_exception_expected(
+    reader_output: ReaderOutput,
+):
+    sp = KeywordSplitter(patterns=[r"X"], include_delimiters="none")
+    # Force a non-string type into text after construction
+    reader_output.text = 123  # type: ignore[assignment]
+    with pytest.raises(ReaderOutputException):
+        sp.split(reader_output)
+
+
+def test_split_empty_text_emits_splitter_input_warning_expected():
+    ro = ReaderOutput(
+        text="   ",  # whitespace-only
+        document_name="whitespace.txt",
+        document_path="/tmp/whitespace.txt",
+    )
+    sp = KeywordSplitter(patterns=[r"X"], include_delimiters="none")
+    with pytest.warns(SplitterInputWarning):
+        out = sp.split(ro)
+    # Still returns a single empty-ish chunk as fallback behaviour
+    assert len(out.chunks) == 1
+
+
+def test_split_wraps_build_output_errors_in_splitter_output_exception_expected(
+    reader_output: ReaderOutput,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    sp = KeywordSplitter(patterns=[r"TODO"], include_delimiters="before")
+
+    def boom_build_output(*_args, **_kwargs):
+        raise TypeError("boom")
+
+    # Force _build_output to fail with a TypeError, which should be wrapped
+    monkeypatch.setattr(
+        sp,
+        "_build_output",
+        boom_build_output,  # type: ignore[assignment]
+    )
+
+    with pytest.raises(SplitterOutputException) as excinfo:
+        sp.split(reader_output)
+
+    assert "Failed to build SplitterOutput in KeywordSplitter" in str(excinfo.value)
+
+
+def test_split_mismatched_chunk_ids_raises_invalid_chunk_exception_expected(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    text = "TODO: " + ("word " * 100)
+    ro = ReaderOutput(
+        text=text,
+        document_name="ids.txt",
+        document_path="/tmp/ids.txt",
+    )
+
+    sp = KeywordSplitter(
+        patterns=[r"TODO:"], include_delimiters="before", chunk_size=10
+    )
+
+    # Force a deliberate mismatch: always return a single chunk_id
+    monkeypatch.setattr(
+        KeywordSplitter,
+        "_generate_chunk_ids",
+        lambda _self, _n: ["only-one-id"],
+    )
+
+    with pytest.raises(InvalidChunkException):
+        sp.split(ro)

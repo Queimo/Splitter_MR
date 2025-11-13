@@ -1,12 +1,18 @@
 import re
 import uuid
+import warnings
 from typing import Dict, Iterable, List, Pattern, Tuple, Union
 
 from ...schema import (
     DEFAULT_KEYWORD_DELIMITER_POS,
     SUPPORTED_KEYWORD_DELIMITERS,
+    InvalidChunkException,
     ReaderOutput,
+    ReaderOutputException,
+    SplitterConfigException,
+    SplitterInputWarning,
     SplitterOutput,
+    SplitterOutputException,
 )
 from ..base_splitter import BaseSplitter
 
@@ -25,6 +31,13 @@ class KeywordSplitter(BaseSplitter):
           ``patterns`` is a dict. This simplifies per-keyword accounting.
         - If the input text is empty or no matches are found, the entire text
           becomes a single chunk (subject to size-based re-chunking).
+
+    Raises:
+        SplitterConfigException: If ``patterns``, ``include_delimiters`` or ``chunk_size``
+            are invalid or regex compilation fails.
+        ReaderOutputException: If ``reader_output`` does not expose a valid ``text`` field.
+        InvalidChunkException: If internal chunk accounting becomes inconsistent.
+        SplitterOutputException: If building :class:`SplitterOutput` fails unexpectedly.
     """
 
     def __init__(
@@ -53,11 +66,36 @@ class KeywordSplitter(BaseSplitter):
             chunk_size (int): Target maximum size (in characters) for each chunk. When a
                 produced chunk exceeds this value, it is *soft*-wrapped by whitespace
                 using a greedy strategy.
+
+        Raises:
+            SplitterConfigException: If configuration is inconsistent or invalid.
         """
+        # Basic config validation at construction time
+        if chunk_size <= 0 or not isinstance(chunk_size, int):
+            raise SplitterConfigException(
+                f"chunk_size must be a positive integer, got {chunk_size!r}"
+            )
+
         super().__init__(chunk_size=chunk_size)
         self.include_delimiters = self._validate_include_delimiters(include_delimiters)
-        self.pattern_names, self.compiled = self._compile_patterns(patterns, flags)
+
+        # Validate patterns type early for clearer errors
+        if not isinstance(patterns, (list, dict)):
+            raise SplitterConfigException(
+                "patterns must be a list of regex strings or a dict[name -> pattern], "
+                f"got {type(patterns).__name__!r}"
+            )
+
+        try:
+            self.pattern_names, self.compiled = self._compile_patterns(patterns, flags)
+        except re.error as exc:  # invalid regex, bad group name, etc.
+            raise SplitterConfigException(
+                f"Failed to compile keyword patterns: {exc}"
+            ) from exc
+
         self.flags = flags
+
+    # ---- Main method ---- #
 
     def split(self, reader_output: ReaderOutput) -> SplitterOutput:
         """
@@ -73,85 +111,64 @@ class KeywordSplitter(BaseSplitter):
         Returns:
             SplitterOutput: Output structure with chunked text and metadata.
 
+        Raises:
+            ReaderOutputException: If ``reader_output`` has an invalid structure.
+            InvalidChunkException: If the number of chunks and chunk IDs diverge.
+            SplitterOutputException: If constructing the output object fails.
+
         Example:
             Basic usage with a **list** of patterns:
-
-            ```python
-            from splitter_mr.splitter import KeywordSplitter
-            from splitter_mr.schema.models import ReaderOutput
-
-            text = (
-                "Intro paragraph.\\n"
-                "## Section A\\nBody A.\\n"
-                "## Section B\\nBody B.\\n"
-                "Conclusion."
-            )
-            ro = ReaderOutput(text=text, document_name="demo.md")
-
-            splitter = KeywordSplitter(
-                patterns=[r"^##\\s+.*$", r"Conclusion\\.",],  # headings + the word 'Conclusion.'
-                flags=re.MULTILINE,
-                include_delimiters="before",  # attach the matched delimiter to the left chunk
-                chunk_size=1000,
-            )
-            out = splitter.split(ro)
-            print(out.chunks)
-            ```
-            ```python
-            [
-                "Intro paragraph.\\n## Section A",
-                "Body A.\\n## Section B",
-                "Body B.\\nConclusion."
-            ]
-            ```
-
-            Using a **dict** to name patterns (names show up in metadata counts):
-
-            ```python
-            patterns = {
-                "h2": r"^##\\s+.*$",
-                "the_end": r"^Conclusion\\.$",
-            }
-            splitter = KeywordSplitter(
-                patterns=patterns,
-                flags=re.MULTILINE,
-                include_delimiters="after",  # put the matched delimiter at the start of the next chunk
-                chunk_size=1000,
-            )
-            out = splitter.split(ro)
-            print(out.metadata["keyword_matches"]["counts"])
-            ```
-            ```python
-            {'h2': 2, 'the_end': 1}
-            ```
-            ```python
-            print(out.split_params["pattern_names"])
-            ```
-            ```python
-            ['h2', 'the_end']
-            ```
+            ...
         """
-        text: str = reader_output.text or ""
+        if not hasattr(reader_output, "text"):
+            raise ReaderOutputException(
+                "ReaderOutput object must expose a 'text' attribute."
+            )
+
+        text = reader_output.text
+        if text is None:
+            text: str = ""
+        elif not isinstance(text, str):
+            raise ReaderOutputException(
+                f"ReaderOutput.text must be of type 'str' or None, got "
+                f"{type(text).__name__!r}"
+            )
+
+        # Warn on suspiciously empty input
+        if not text.strip():
+            warnings.warn(
+                "KeywordSplitter received empty or whitespace-only text; "
+                "output will contain a single empty chunk.",
+                SplitterInputWarning,
+                stacklevel=2,
+            )
 
         # Ensure document_id is present so it propagates (fixes metadata test)
-        if not reader_output.document_id:
+        if not getattr(reader_output, "document_id", None):
             reader_output.document_id = str(uuid.uuid4())
 
         # Primary split by keyword matches (names used for counts)
         raw_chunks, match_spans, match_names = self._split_by_keywords(text)
 
         # Secondary size-based re-chunking to respect chunk_size
-        sized_chunks: List[str] = []
+        sized_chunks: list[str] = []
         for ch in raw_chunks:
             sized_chunks.extend(self._soft_wrap(ch, self.chunk_size))
         if not sized_chunks:
-            sized_chunks = [""]
+            sized_chunks: list[str] = [""]
 
         # Generate IDs
         chunk_ids = self._generate_chunk_ids(len(sized_chunks))
 
+        # Extra sanity check: chunks vs IDs
+        if len(chunk_ids) != len(sized_chunks):
+            raise InvalidChunkException(
+                "Number of chunk IDs does not match number of chunks "
+                f"(chunk_ids={len(chunk_ids)}, chunks={len(sized_chunks)})."
+            )
+
         # Build metadata (ensure counts/spans are always present)
-        matches_meta = {
+        matches_meta: dict[str, any] = {
             "counts": self._count_by_name(match_names),
             "spans": match_spans,
             "include_delimiters": self.include_delimiters,
@@ -160,14 +177,19 @@ class KeywordSplitter(BaseSplitter):
             "chunk_size": self.chunk_size,
         }
 
-        return self._build_output(
-            reader_output=reader_output,
-            chunks=sized_chunks,
-            chunk_ids=chunk_ids,
-            matches_meta=matches_meta,
-        )
+        try:
+            return self._build_output(
+                reader_output=reader_output,
+                chunks=sized_chunks,
+                chunk_ids=chunk_ids,
+                matches_meta=matches_meta,
+            )
+        except (TypeError, ValueError) as exc:
+            raise SplitterOutputException(
+                f"Failed to build SplitterOutput in KeywordSplitter: {exc}"
+            ) from exc
 
-    # ---- Internals ------------------------------------------------------ #
+    # ---- Helpers ---- #
 
     @staticmethod
     def _validate_include_delimiters(value: str) -> str:
@@ -181,14 +203,18 @@ class KeywordSplitter(BaseSplitter):
             str: Normalized delimiter mode.
 
         Raises:
-            ValueError: If the mode is invalid.
+            SplitterConfigException: If the mode is invalid.
         """
-        v: list = value.lower().strip()
+        if not isinstance(value, str):
+            raise SplitterConfigException(
+                f"include_delimiters must be a string, got {type(value).__name__!r}"
+            )
+
+        v: str = value.lower().strip()
         if v not in SUPPORTED_KEYWORD_DELIMITERS:
-            raise ValueError(
-                f"include_delimiters must be one of {
-                    sorted(SUPPORTED_KEYWORD_DELIMITERS)
-                }, got {value!r}"
+            raise SplitterConfigException(
+                "include_delimiters must be one of "
+                f"{sorted(SUPPORTED_KEYWORD_DELIMITERS)}, got {value!r}"
             )
         return v
 
@@ -208,16 +234,27 @@ class KeywordSplitter(BaseSplitter):
 
         Returns:
             Tuple[List[str], Pattern[str]]: Names and compiled regex.
+
+        Raises:
+            SplitterConfigException: If patterns have an unsupported type.
+            re.error: If regex compilation fails (caught in __init__).
         """
         if isinstance(patterns, dict):
-            names = list(patterns.keys())
-            parts = [f"(?P<{name}>{pat})" for name, pat in patterns.items()]
+            names: list = list(patterns.keys())
+            parts: list = [f"(?P<{name}>{pat})" for name, pat in patterns.items()]
+        elif isinstance(patterns, list):
+            names: list = [f"k{i}" for i in range(len(patterns))]
+            parts: list = [f"(?P<{n}>{pat})" for n, pat in zip(names, patterns)]
         else:
-            names = [f"k{i}" for i in range(len(patterns))]
-            parts = [f"(?P<{n}>{pat})" for n, pat in zip(names, patterns)]
+            # Should be prevented by __init__, but keep as guardrail.
+            raise SplitterConfigException(
+                "patterns must be a list of regex strings or a dict[name -> pattern]"
+            )
 
-        combined = "|".join(parts) if parts else r"(?!x)x"  # never matches if empty
-        compiled = re.compile(combined, flags)
+        combined: str = (
+            "|".join(parts) if parts else r"(?!x)x"
+        )  # never matches if empty
+        compiled: re.Pattern = re.compile(combined, flags)
         return names, compiled
 
     def _split_by_keywords(
@@ -238,7 +275,6 @@ class KeywordSplitter(BaseSplitter):
         """
 
         def _append_chunk(acc: List[str], chunk: str) -> None:
-            # Keep only non-empty (after strip) chunks here; final fallback to [""] is done by caller
             if chunk and chunk.strip():
                 acc.append(chunk)
 
@@ -246,21 +282,22 @@ class KeywordSplitter(BaseSplitter):
         spans: list[tuple[int, int]] = []
         names: list[str] = []
 
-        matches = list(self.compiled.finditer(text))
+        matches: list = list(self.compiled.finditer(text))
         last_idx: int = 0
-        pending_prefix = ""  # used when include_delimiters is "after" or "both"
+        pending_prefix: str = ""  # used when include_delimiters is "after" or "both"
 
         for m in matches:
             start, end = m.span()
-            match_txt = text[start:end]
-            group_name = m.lastgroup or "unknown"
+            match_txt: str = text[start:end]
+            group_name: str = m.lastgroup or "unknown"
 
             spans.append((start, end))
             names.append(group_name)
 
-            # Build the piece between last match end and this match start, prefixing any pending delimiter
-            before_piece = pending_prefix + text[last_idx:start]
-            pending_prefix = ""
+            # Build the piece between last match end and this match start,
+            # prefixing any pending delimiter
+            before_piece: str = pending_prefix + text[last_idx:start]
+            pending_prefix: str = ""
 
             # Attach delimiter to the left side if requested
             if self.include_delimiters in ("before", "both"):
@@ -268,22 +305,22 @@ class KeywordSplitter(BaseSplitter):
 
             _append_chunk(chunks, before_piece)
 
-            # If delimiter should be on the right, carry it forward to prefix next chunk
+            # If delimiter should be on the right, carry it
+            # forward to prefix next chunk
             if self.include_delimiters in ("after", "both"):
                 pending_prefix = match_txt
 
-            last_idx = end
+            last_idx: int = end
 
         # Remainder after the last match (may contain pending_prefix)
-        remainder = pending_prefix + text[last_idx:]
+        remainder: str = pending_prefix + text[last_idx:]
         _append_chunk(chunks, remainder)
 
-        # If no non-empty chunks were appended, return a single empty chunk (tests expect this)
         if not chunks:
             return [""], spans, names
 
         # normalize whitespace trimming for each chunk
-        chunks = [c.strip() for c in chunks if c and c.strip()]
+        chunks: list[str] = [c.strip() for c in chunks if c and c.strip()]
 
         if not chunks:
             return [""], spans, names
@@ -331,7 +368,8 @@ class KeywordSplitter(BaseSplitter):
     @staticmethod
     def _count_by_name(names: Iterable[str]) -> Dict[str, int]:
         """
-        Aggregate match counts by group name (k0/k1/... for list patterns, custom names for dict).
+        Aggregate match counts by group name (k0/k1/... for list patterns,
+        custom names for dict).
 
         Args:
             names (Iterable[str]): Group names.

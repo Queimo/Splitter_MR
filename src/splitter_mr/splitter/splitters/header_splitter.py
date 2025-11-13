@@ -77,6 +77,173 @@ class HeaderSplitter(BaseSplitter):
         self.headers_to_split_on: Tuple[HeaderName, ...] = safe_headers
         self.group_header_with_content = bool(group_header_with_content)
 
+    # ---- Main method ---- #
+
+    def split(self, reader_output: ReaderOutput) -> SplitterOutput:
+        """
+        Perform header-based splitting with HTML→Markdown conversion and safe fallback.
+
+        Steps:
+            1. Detect filetype (HTML/MD).
+            2. If HTML, convert to Markdown with HtmlToMarkdown (emits ATX headings).
+            3. If Markdown, normalize Setext headings to ATX.
+            4. Split by headers via MarkdownHeaderTextSplitter.
+            5. If no headers found, fallback to RecursiveCharacterTextSplitter.
+
+        Args:
+            reader_output: The reader output containing text and metadata.
+
+        Returns:
+            SplitterOutput: A populated splitter output with chunk contents and metadata.
+
+        Raises:
+            ValueError: If ``reader_output.text`` is empty.
+
+        Example:
+            Basic Markdown input with default headers (H1–H6), keeping headers with content:
+
+            ```python
+            from splitter_mr.splitter import HeaderSplitter
+            from splitter_mr.schema.models import ReaderOutput
+
+            md = (
+                "# Title\\n"
+                "Intro paragraph.\\n\\n"
+                "## Section A\\n"
+                "Content A.\\n\\n"
+                "## Section B\\n"
+                "Content B."
+            )
+            ro = ReaderOutput(text=md, document_name="example.md")
+
+            splitter = HeaderSplitter(group_header_with_content=True)  # keep headers in chunks
+            out = splitter.split(ro)
+            print(out.chunks)
+            ```
+            Possible output (simplified):
+            ```python
+            [
+                "# Title\\nIntro paragraph.",
+                "## Section A\\nContent A.",
+                "## Section B\\nContent B."
+            ]
+            ```
+
+            HTML input with a restricted set of headers and stripping headers from chunks:
+
+            ```python
+            html = (
+                "<h1>Title</h1>"
+                "<p>Intro paragraph.</p>"
+                "<h2>Section A</h2>"
+                "<p>Content A.</p>"
+                "<h3>Sub A.1</h3>"
+                "<p>Detail A.1</p>"
+            )
+            ro = ReaderOutput(text=html, document_name="example.html")
+
+            # Only split on Header 1 and Header 2 (i.e., H1/H2)
+            splitter = HeaderSplitter(
+                headers_to_split_on=("Header 1", "Header 2"),
+                group_header_with_content=False  # drop headers from chunks
+            )
+            out = splitter.split(ro)
+            print(out.chunks)
+            ```
+            Possible output (simplified):
+            ```python
+            [
+                "Intro paragraph.",
+                "Content A.\\nSub A.1\\nDetail A.1"
+            ]
+            ```
+
+        Warnings:
+            SplitterInputWarning: if text field in ReaderOutput is missing or void.
+
+        Raises:
+            HtmlConversionError: if HTML Conversion fails.
+        """
+        text: str = reader_output.text
+        if text is None or not str(text).strip():
+            warnings.warn(
+                SplitterInputWarning(
+                    "ReaderOutput.text is empty or whitespace-only. "
+                    "Proceeding; this will yield a single empty chunk."
+                )
+            )
+            chunks: list[str] = [""]
+            return SplitterOutput(
+                chunks=chunks,
+                chunk_id=self._generate_chunk_ids(len(chunks)),
+                document_name=reader_output.document_name,
+                document_path=reader_output.document_path,
+                document_id=reader_output.document_id,
+                conversion_method=reader_output.conversion_method,
+                reader_method=reader_output.reader_method,
+                ocr_method=reader_output.ocr_method,
+                split_method="header_splitter",
+                split_params={
+                    "headers_to_split_on": list(self.headers_to_split_on),
+                    "group_header_with_content": self.group_header_with_content,
+                },
+                metadata=self._default_metadata(),
+            )
+
+        filetype: str = self._guess_filetype(reader_output)
+        tuples: list[tuple] = self._make_tuples("md")
+
+        text: str = reader_output.text
+
+        # HTML → Markdown using the project's converter
+        if filetype == "html":
+            try:
+                text: str = HtmlToMarkdown().convert(text)
+            except Exception as e:
+                raise HtmlConversionError(
+                    f"HTML→Markdown failed for {reader_output.document_name!r}"
+                ) from e
+        else:
+            text: str = self._normalize_setext(text)
+
+        # Detect presence of ATX headers (after conversion/normalization)
+        has_headers: bool = bool(re.search(r"(?m)^\s*#{1,6}\s+\S", text))
+
+        # Configure header splitter. group_header_with_content -> strip_headers False
+        splitter = MarkdownHeaderTextSplitter(
+            headers_to_split_on=tuples,
+            return_each_line=False,
+            strip_headers=not self.group_header_with_content,
+        )
+
+        docs: list[str] = splitter.split_text(text) if has_headers else []
+        # Fallback if no headers were found
+        if not docs:
+            rc = RecursiveCharacterTextSplitter(
+                chunk_size=max(1, int(self.chunk_size) or 1000),
+                chunk_overlap=min(200, max(0, int(self.chunk_size) // 10)),
+            )
+            docs: list = rc.create_documents([text])
+
+        chunks: list[str] = [doc.page_content for doc in docs]
+
+        return SplitterOutput(
+            chunks=chunks,
+            chunk_id=self._generate_chunk_ids(len(chunks)),
+            document_name=reader_output.document_name,
+            document_path=reader_output.document_path,
+            document_id=reader_output.document_id,
+            conversion_method=reader_output.conversion_method,
+            reader_method=reader_output.reader_method,
+            ocr_method=reader_output.ocr_method,
+            split_method="header_splitter",
+            split_params={
+                "headers_to_split_on": list(self.headers_to_split_on),
+                "group_header_with_content": self.group_header_with_content,
+            },
+            metadata=self._default_metadata(),
+        )
+
     # ---- Helpers ---- #
 
     @staticmethod
@@ -252,170 +419,3 @@ class HeaderSplitter(BaseSplitter):
             )
 
         return normalized
-
-    # ---- Main method ---- #
-
-    def split(self, reader_output: ReaderOutput) -> SplitterOutput:
-        """
-        Perform header-based splitting with HTML→Markdown conversion and safe fallback.
-
-        Steps:
-            1. Detect filetype (HTML/MD).
-            2. If HTML, convert to Markdown with HtmlToMarkdown (emits ATX headings).
-            3. If Markdown, normalize Setext headings to ATX.
-            4. Split by headers via MarkdownHeaderTextSplitter.
-            5. If no headers found, fallback to RecursiveCharacterTextSplitter.
-
-        Args:
-            reader_output: The reader output containing text and metadata.
-
-        Returns:
-            SplitterOutput: A populated splitter output with chunk contents and metadata.
-
-        Raises:
-            ValueError: If ``reader_output.text`` is empty.
-
-        Example:
-            Basic Markdown input with default headers (H1–H6), keeping headers with content:
-
-            ```python
-            from splitter_mr.splitter import HeaderSplitter
-            from splitter_mr.schema.models import ReaderOutput
-
-            md = (
-                "# Title\\n"
-                "Intro paragraph.\\n\\n"
-                "## Section A\\n"
-                "Content A.\\n\\n"
-                "## Section B\\n"
-                "Content B."
-            )
-            ro = ReaderOutput(text=md, document_name="example.md")
-
-            splitter = HeaderSplitter(group_header_with_content=True)  # keep headers in chunks
-            out = splitter.split(ro)
-            print(out.chunks)
-            ```
-            Possible output (simplified):
-            ```python
-            [
-                "# Title\\nIntro paragraph.",
-                "## Section A\\nContent A.",
-                "## Section B\\nContent B."
-            ]
-            ```
-
-            HTML input with a restricted set of headers and stripping headers from chunks:
-
-            ```python
-            html = (
-                "<h1>Title</h1>"
-                "<p>Intro paragraph.</p>"
-                "<h2>Section A</h2>"
-                "<p>Content A.</p>"
-                "<h3>Sub A.1</h3>"
-                "<p>Detail A.1</p>"
-            )
-            ro = ReaderOutput(text=html, document_name="example.html")
-
-            # Only split on Header 1 and Header 2 (i.e., H1/H2)
-            splitter = HeaderSplitter(
-                headers_to_split_on=("Header 1", "Header 2"),
-                group_header_with_content=False  # drop headers from chunks
-            )
-            out = splitter.split(ro)
-            print(out.chunks)
-            ```
-            Possible output (simplified):
-            ```python
-            [
-                "Intro paragraph.",
-                "Content A.\\nSub A.1\\nDetail A.1"
-            ]
-            ```
-
-        Warnings:
-            SplitterInputWarning: if text field in ReaderOutput is missing or void.
-
-        Raises:
-            HtmlConversionError: if HTML Conversion fails.
-        """
-        text: str = reader_output.text
-        if text is None or not str(text).strip():
-            warnings.warn(
-                SplitterInputWarning(
-                    "ReaderOutput.text is empty or whitespace-only. "
-                    "Proceeding; this will yield a single empty chunk."
-                )
-            )
-            chunks: list[str] = [""]
-            return SplitterOutput(
-                chunks=chunks,
-                chunk_id=self._generate_chunk_ids(len(chunks)),
-                document_name=reader_output.document_name,
-                document_path=reader_output.document_path,
-                document_id=reader_output.document_id,
-                conversion_method=reader_output.conversion_method,
-                reader_method=reader_output.reader_method,
-                ocr_method=reader_output.ocr_method,
-                split_method="header_splitter",
-                split_params={
-                    "headers_to_split_on": list(self.headers_to_split_on),
-                    "group_header_with_content": self.group_header_with_content,
-                },
-                metadata=self._default_metadata(),
-            )
-
-        filetype: str = self._guess_filetype(reader_output)
-        tuples: list[tuple] = self._make_tuples("md")
-
-        text: str = reader_output.text
-
-        # HTML → Markdown using the project's converter
-        if filetype == "html":
-            try:
-                text: str = HtmlToMarkdown().convert(text)
-            except Exception as e:
-                raise HtmlConversionError(
-                    f"HTML→Markdown failed for {reader_output.document_name!r}"
-                ) from e
-        else:
-            text: str = self._normalize_setext(text)
-
-        # Detect presence of ATX headers (after conversion/normalization)
-        has_headers: bool = bool(re.search(r"(?m)^\s*#{1,6}\s+\S", text))
-
-        # Configure header splitter. group_header_with_content -> strip_headers False
-        splitter = MarkdownHeaderTextSplitter(
-            headers_to_split_on=tuples,
-            return_each_line=False,
-            strip_headers=not self.group_header_with_content,
-        )
-
-        docs: list[str] = splitter.split_text(text) if has_headers else []
-        # Fallback if no headers were found
-        if not docs:
-            rc = RecursiveCharacterTextSplitter(
-                chunk_size=max(1, int(self.chunk_size) or 1000),
-                chunk_overlap=min(200, max(0, int(self.chunk_size) // 10)),
-            )
-            docs: list = rc.create_documents([text])
-
-        chunks: list[str] = [doc.page_content for doc in docs]
-
-        return SplitterOutput(
-            chunks=chunks,
-            chunk_id=self._generate_chunk_ids(len(chunks)),
-            document_name=reader_output.document_name,
-            document_path=reader_output.document_path,
-            document_id=reader_output.document_id,
-            conversion_method=reader_output.conversion_method,
-            reader_method=reader_output.reader_method,
-            ocr_method=reader_output.ocr_method,
-            split_method="header_splitter",
-            split_params={
-                "headers_to_split_on": list(self.headers_to_split_on),
-                "group_header_with_content": self.group_header_with_content,
-            },
-            metadata=self._default_metadata(),
-        )

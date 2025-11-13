@@ -51,7 +51,19 @@ class CharacterSplitter(BaseSplitter):
         ```
     """
 
-    def __init__(self, chunk_size: int = 1000, chunk_overlap: int = 0):
+    def __init__(self, chunk_size: int = 1000, chunk_overlap: int | float = 0):
+        """
+        Initialize the CharacterSplitter class.
+
+        Args:
+            chunk_size (int): Maximum number of characters per chunk.
+            chunk_overlap (int | float): number of characters which matches between
+                contiguous chunks.
+
+        Raises:
+            SplitterConfigException: if chunk_size or chunk_overlap is not an integer
+                or it has an invalid value.
+        """
         if not isinstance(chunk_size, int) or chunk_size < 1:
             raise SplitterConfigException("chunk_size must be an integer >= 1")
 
@@ -73,57 +85,7 @@ class CharacterSplitter(BaseSplitter):
         super().__init__(chunk_size)
         self.chunk_overlap = chunk_overlap
 
-    def _coerce_overlap(self, chunk_size: int) -> int:
-        """
-        Convert the ``chunk_overlap`` parameter into an absolute
-        number of characters.
-
-        Args:
-            chunk_size (int): The configured chunk size.
-
-        Returns:
-            int: The computed overlap value (in characters).
-        """
-        if isinstance(self.chunk_overlap, float):
-            return int(chunk_size * self.chunk_overlap)
-        return int(self.chunk_overlap)
-
-    def _check_input(self, reader_output: ReaderOutput, text: str) -> None:
-        """
-        Validate and warn about potential input issues.
-
-        This helper method emits warnings instead of raising exceptions
-        for the following cases:
-          - Empty or whitespace-only text.
-          - Declared JSON input (``conversion_method='json'``) that cannot be
-            parsed as JSON.
-
-        Args:
-            reader_output (ReaderOutput): Input reader output containing text
-                and metadata.
-            text (str): The textual content to check.
-
-        Warnings:
-            SplitterInputWarning: Emitted if text is empty or non-parseable JSON.
-        """
-        if text.strip() == "":
-            warnings.warn(
-                SplitterInputWarning(
-                    "ReaderOutput.text is empty or whitespace-only. "
-                    "Proceeding; this will yield a single empty chunk."
-                )
-            )
-
-        if (reader_output.conversion_method or "").lower() == "json":
-            try:
-                json.loads(text or "")
-            except Exception:
-                warnings.warn(
-                    SplitterInputWarning(
-                        "Conversion method is 'json' but text is not valid JSON. "
-                        "Proceeding as plain text."
-                    )
-                )
+    # ---- Main method ---- #
 
     def split(self, reader_output: ReaderOutput) -> SplitterOutput:
         """
@@ -158,6 +120,9 @@ class CharacterSplitter(BaseSplitter):
 
         Example:
             ```python
+            from splitter_mr.schema import ReaderOutput
+            from splitter_mr.splitter import CharacterSplitter
+
             reader_output = ReaderOutput(
                 text="Hello world! This is a test text for splitting.",
                 document_name="example.txt",
@@ -228,3 +193,57 @@ class CharacterSplitter(BaseSplitter):
             return output
         except Exception as e:
             raise SplitterOutputException(f"Failed to build SplitterOutput: {e}") from e
+
+    # ---- Helpers ---- #
+
+    def _coerce_overlap(self, chunk_size: int) -> int:
+        """
+        Convert the ``chunk_overlap`` parameter into an absolute
+        number of characters.
+
+        Args:
+            chunk_size (int): The configured chunk size.
+
+        Returns:
+            int: The computed overlap value (in characters).
+        """
+        if isinstance(self.chunk_overlap, float):
+            return int(chunk_size * self.chunk_overlap)
+        return int(self.chunk_overlap)
+
+    def _check_input(self, reader_output: ReaderOutput, text: str) -> None:
+        """
+        Validate and warn about potential input issues.
+
+        This helper method emits warnings instead of raising exceptions
+        for the following cases:
+          - Empty or whitespace-only text.
+          - Declared JSON input (``conversion_method='json'``) that cannot be
+            parsed as JSON.
+
+        Args:
+            reader_output (ReaderOutput): Input reader output containing text
+                and metadata.
+            text (str): The textual content to check.
+
+        Warnings:
+            SplitterInputWarning: Emitted if text is empty or non-parseable JSON.
+        """
+        if text.strip() == "":
+            warnings.warn(
+                SplitterInputWarning(
+                    "ReaderOutput.text is empty or whitespace-only. "
+                    "Proceeding; this will yield a single empty chunk."
+                )
+            )
+
+        if (reader_output.conversion_method or "").lower() == "json":
+            try:
+                json.loads(text or "")
+            except Exception:
+                warnings.warn(
+                    SplitterInputWarning(
+                        "Conversion method is 'json' but text is not valid JSON. "
+                        "Proceeding as plain text."
+                    )
+                )

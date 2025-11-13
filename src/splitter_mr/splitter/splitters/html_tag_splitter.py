@@ -31,15 +31,9 @@ class HTMLTagSplitter(BaseSplitter):
     """Split HTML content by tag, with optional batching and Markdown conversion.
 
     Behavior:
-      * When `tag` is provided (e.g., `div`), split by all matching elements.
-      * When `tag` is `None`, auto-detect the most frequent and shallowest tag.
-      * Tables receive special handling to preserve header context when batching.
-
-    Attributes:
-      chunk_size: Maximum chunk size in characters (used only for batching).
-      tag: The HTML tag to split on, or `None` to auto-detect.
-      batch: Whether to group elements into chunks up to `chunk_size`.
-      to_markdown: Whether to convert resulting chunks to Markdown.
+      - When `tag` is provided (e.g., `div`), split by all matching elements.
+      - When `tag` is `None`, auto-detect the most frequent and shallowest tag.
+      - Tables receive special handling to preserve header context when batching.
     """
 
     def __init__(
@@ -50,7 +44,7 @@ class HTMLTagSplitter(BaseSplitter):
         batch: bool = True,
         to_markdown: bool = True,
     ):
-        """Initialize the splitter.
+        """Initialize the HTMLTagSplitter class.
 
         Args:
           chunk_size: Maximum chunk size in characters for batching. If `0`, `1`,
@@ -78,7 +72,7 @@ class HTMLTagSplitter(BaseSplitter):
         self.batch = batch
         self.to_markdown = to_markdown
 
-    # ------------------------- Public API ------------------------- #
+    # ---- Main method ---- #
 
     def split(self, reader_output: ReaderOutput) -> SplitterOutput:
         """Split HTML using the configured tag and batching, then optionally convert to Markdown.
@@ -144,7 +138,7 @@ class HTMLTagSplitter(BaseSplitter):
             tag=effective_tag,
         )
 
-    # ------------------------- Core helpers ------------------------- #
+    # ---- Helpers ---- #
 
     def _parse_html(self, html: str) -> bs4.BeautifulSoup:
         """Parse HTML into a BeautifulSoup document.

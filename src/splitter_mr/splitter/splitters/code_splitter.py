@@ -13,6 +13,8 @@ from ...schema.exceptions import (
 from ...schema.warnings import SplitterInputWarning
 from ..base_splitter import BaseSplitter
 
+# ---- External helpers ---- #
+
 
 def get_langchain_language(lang_str: str) -> Language:
     """Resolve a string name to a LangChain ``Language`` enum.
@@ -78,6 +80,88 @@ class CodeSplitter(BaseSplitter):
             raise SplitterConfigException("chunk_size must be an integer >= 1")
         super().__init__(chunk_size)
         self.language = language
+
+    # ---- Main method ---- #
+
+    def split(self, reader_output: ReaderOutput) -> SplitterOutput:
+        """Split the provided source code into language-aware chunks.
+
+        The method performs input validation and warning emission, determines
+        the appropriate language enum, builds code chunks via LangChain,
+        and returns a fully validated :class:`SplitterOutput` instance.
+
+        Args:
+            reader_output (ReaderOutput): A validated input object containing
+                at least a ``text`` field and optional document metadata.
+
+        Returns:
+            SplitterOutput: Structured splitter output containing:
+                * ``chunks`` — list of split code segments.
+                * ``chunk_id`` — corresponding unique identifiers.
+                * document metadata and splitter parameters.
+
+        Raises:
+            UnsupportedCodeLanguage: If ``self.language`` is not recognized.
+            InvalidChunkException: If chunk construction fails or yields invalid chunks.
+            SplitterOutputException: If the :class:`SplitterOutput` cannot be built
+                or validated.
+
+        Warnings:
+            SplitterInputWarning: If text is empty, whitespace-only, or invalid JSON.
+
+        Example:
+            ```python
+            from splitter_mr.splitter import CodeSplitter
+            from splitter_mr.schema.models import ReaderOutput
+
+            reader_output = ReaderOutput(
+                text="def foo():\\n    pass\\n\\nclass Bar:\\n    def baz(self):\\n        pass",
+                document_name="example.py",
+                document_path="/tmp/example.py",
+            )
+
+            splitter = CodeSplitter(chunk_size=50, language="python")
+            output = splitter.split(reader_output)
+            print(output.chunks)
+            ```
+            ```python
+            ['def foo():\\n    pass\\n', 'class Bar:\\n    def baz(self):\\n        pass']
+            ```
+        """
+        text = reader_output.text or ""
+        chunk_size = self.chunk_size
+
+        # Check input
+        self._warn_on_input(reader_output, text)
+
+        # Resolve language
+        lang_enum = get_langchain_language(self.language)
+
+        # Build chunks
+        chunks = self._build_chunks(text, lang_enum, chunk_size)
+
+        # Produce output
+        try:
+            chunk_ids = self._generate_chunk_ids(len(chunks))
+            metadata = self._default_metadata()
+            output = SplitterOutput(
+                chunks=chunks,
+                chunk_id=chunk_ids,
+                document_name=reader_output.document_name,
+                document_path=reader_output.document_path or "",
+                document_id=reader_output.document_id,
+                conversion_method=reader_output.conversion_method,
+                reader_method=reader_output.reader_method,
+                ocr_method=reader_output.ocr_method,
+                split_method="code_splitter",
+                split_params={"chunk_size": chunk_size, "language": self.language},
+                metadata=metadata,
+            )
+            return output
+        except Exception as e:
+            raise SplitterOutputException(f"Failed to build SplitterOutput: {e}") from e
+
+    # ---- Internal helpers ---- #
 
     def _warn_on_input(self, reader_output: ReaderOutput, text: str) -> None:
         """Emit :class:`SplitterInputWarning` for suspicious or malformed inputs.
@@ -160,81 +244,3 @@ class CodeSplitter(BaseSplitter):
             raise InvalidChunkException(
                 f"Unexpected error while building code chunks: {e}"
             ) from e
-
-    def split(self, reader_output: ReaderOutput) -> SplitterOutput:
-        """Split the provided source code into language-aware chunks.
-
-        The method performs input validation and warning emission, determines
-        the appropriate language enum, builds code chunks via LangChain,
-        and returns a fully validated :class:`SplitterOutput` instance.
-
-        Args:
-            reader_output (ReaderOutput): A validated input object containing
-                at least a ``text`` field and optional document metadata.
-
-        Returns:
-            SplitterOutput: Structured splitter output containing:
-                * ``chunks`` — list of split code segments.
-                * ``chunk_id`` — corresponding unique identifiers.
-                * document metadata and splitter parameters.
-
-        Raises:
-            UnsupportedCodeLanguage: If ``self.language`` is not recognized.
-            InvalidChunkException: If chunk construction fails or yields invalid chunks.
-            SplitterOutputException: If the :class:`SplitterOutput` cannot be built
-                or validated.
-
-        Warnings:
-            SplitterInputWarning: If text is empty, whitespace-only, or invalid JSON.
-
-        Example:
-            ```python
-            from splitter_mr.splitter import CodeSplitter
-            from splitter_mr.schema.models import ReaderOutput
-
-            reader_output = ReaderOutput(
-                text="def foo():\\n    pass\\n\\nclass Bar:\\n    def baz(self):\\n        pass",
-                document_name="example.py",
-                document_path="/tmp/example.py",
-            )
-
-            splitter = CodeSplitter(chunk_size=50, language="python")
-            output = splitter.split(reader_output)
-            print(output.chunks)
-            ```
-            ```python
-            ['def foo():\\n    pass\\n', 'class Bar:\\n    def baz(self):\\n        pass']
-            ```
-        """
-        text = reader_output.text or ""
-        chunk_size = self.chunk_size
-
-        # Check input
-        self._warn_on_input(reader_output, text)
-
-        # Resolve language
-        lang_enum = get_langchain_language(self.language)
-
-        # Build chunks
-        chunks = self._build_chunks(text, lang_enum, chunk_size)
-
-        # Produce output
-        try:
-            chunk_ids = self._generate_chunk_ids(len(chunks))
-            metadata = self._default_metadata()
-            output = SplitterOutput(
-                chunks=chunks,
-                chunk_id=chunk_ids,
-                document_name=reader_output.document_name,
-                document_path=reader_output.document_path or "",
-                document_id=reader_output.document_id,
-                conversion_method=reader_output.conversion_method,
-                reader_method=reader_output.reader_method,
-                ocr_method=reader_output.ocr_method,
-                split_method="code_splitter",
-                split_params={"chunk_size": chunk_size, "language": self.language},
-                metadata=metadata,
-            )
-            return output
-        except Exception as e:
-            raise SplitterOutputException(f"Failed to build SplitterOutput: {e}") from e
