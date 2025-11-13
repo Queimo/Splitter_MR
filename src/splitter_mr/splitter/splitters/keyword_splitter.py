@@ -74,7 +74,6 @@ class KeywordSplitter(BaseSplitter):
             SplitterOutput: Output structure with chunked text and metadata.
 
         Example:
-
             Basic usage with a **list** of patterns:
 
             ```python
@@ -82,9 +81,9 @@ class KeywordSplitter(BaseSplitter):
             from splitter_mr.schema.models import ReaderOutput
 
             text = (
-                "Intro paragraph.\n"
-                "## Section A\nBody A.\n"
-                "## Section B\nBody B.\n"
+                "Intro paragraph.\\n"
+                "## Section A\\nBody A.\\n"
+                "## Section B\\nBody B.\\n"
                 "Conclusion."
             )
             ro = ReaderOutput(text=text, document_name="demo.md")
@@ -100,9 +99,9 @@ class KeywordSplitter(BaseSplitter):
             ```
             ```python
             [
-                "Intro paragraph.\n## Section A",
-                "Body A.\n## Section B",
-                "Body B.\nConclusion."
+                "Intro paragraph.\\n## Section A",
+                "Body A.\\n## Section B",
+                "Body B.\\nConclusion."
             ]
             ```
 

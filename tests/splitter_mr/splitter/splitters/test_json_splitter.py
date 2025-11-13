@@ -2,12 +2,17 @@ import json
 from unittest.mock import patch
 
 import pytest
-from pydantic import ValidationError
 
-from splitter_mr.schema import ReaderOutput
+from splitter_mr.schema import (
+    InvalidChunkException,
+    ReaderOutput,
+    ReaderOutputException,
+    SplitterConfigException,
+    SplitterOutputException,
+)
 from splitter_mr.splitter import RecursiveJSONSplitter
 
-# Helpers
+# ---- Helpers, mocks and fixtures ---- #
 
 
 @pytest.fixture
@@ -23,7 +28,7 @@ def reader_output():
     )
 
 
-# Test cases
+# ---- Test cases ---- #
 
 
 def test_recursive_json_splitter_instantiates_and_calls_splitter(reader_output):
@@ -76,5 +81,87 @@ def test_empty_text():
         mock_splitter.split_json.return_value = []
         splitter = RecursiveJSONSplitter(chunk_size=100, min_chunk_size=10)
         reader_output = ReaderOutput(text=json.dumps({}))
-        with pytest.raises(ValidationError):
+        with pytest.raises(SplitterOutputException):
             splitter.split(reader_output)
+
+
+# ---- Exception handling ---- #
+
+
+def test_recursive_json_splitter_invalid_chunk_size_type_raises_splitter_config_exception():
+    with pytest.raises(SplitterConfigException, match="chunk_size"):
+        RecursiveJSONSplitter(chunk_size="100", min_chunk_size=10)
+
+
+def test_recursive_json_splitter_invalid_min_chunk_size_type_raises_splitter_config_exception():
+    with pytest.raises(SplitterConfigException, match="min_chunk_size"):
+        RecursiveJSONSplitter(chunk_size=100, min_chunk_size="10")
+
+
+def test_recursive_json_splitter_invalid_json_raises_reader_output_exception():
+    bad_reader_output = ReaderOutput(
+        text="{ invalid json ",
+        document_name="bad.json",
+        document_path="/tmp/bad.json",
+        document_id="bad-id",
+        conversion_method="json",
+        ocr_method=None,
+    )
+    splitter = RecursiveJSONSplitter(chunk_size=100, min_chunk_size=10)
+
+    with pytest.raises(ReaderOutputException, match="valid JSON"):
+        splitter.split(bad_reader_output)
+
+
+def test_empty_text_produces_void_chunks_and_raises_invalid_chunk_exception():
+    with patch(
+        "splitter_mr.splitter.splitters.json_splitter.RecursiveJsonSplitter"
+    ) as MockSplitter:
+        mock_splitter = MockSplitter.return_value
+        mock_splitter.split_text.return_value = []
+        splitter = RecursiveJSONSplitter(chunk_size=100, min_chunk_size=10)
+
+        reader_output = ReaderOutput(
+            text=json.dumps({}),
+            document_name="empty.json",
+            document_path="/tmp/empty.json",
+            document_id="empty-id",
+            conversion_method="json",
+            ocr_method=None,
+        )
+
+        with pytest.raises(InvalidChunkException, match="void or missing chunks"):
+            splitter.split(reader_output)
+
+
+def test_recursive_json_splitter_runtime_error_from_underlying_splitter_raises_invalid_chunk_exception(
+    reader_output,
+):
+    with patch(
+        "splitter_mr.splitter.splitters.json_splitter.RecursiveJsonSplitter"
+    ) as MockSplitter:
+        mock_splitter = MockSplitter.return_value
+        mock_splitter.split_text.side_effect = RuntimeError("boom")
+
+        splitter = RecursiveJSONSplitter(chunk_size=100, min_chunk_size=10)
+
+        with pytest.raises(InvalidChunkException, match="error trying to split"):
+            splitter.split(reader_output)
+
+
+def test_recursive_json_splitter_build_output_failure_raises_splitter_output_exception(
+    reader_output, monkeypatch
+):
+    # Force SplitterOutput to blow up when called
+    def boom_constructor(*_args, **_kwargs):
+        raise RuntimeError("output boom")
+
+    monkeypatch.setattr(
+        "splitter_mr.splitter.splitters.json_splitter.SplitterOutput",
+        boom_constructor,
+    )
+
+    splitter = RecursiveJSONSplitter(chunk_size=100, min_chunk_size=10)
+
+    with pytest.raises(SplitterOutputException, match="build SplitterOutput response"):
+        splitter.split(reader_output)

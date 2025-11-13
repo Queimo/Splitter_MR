@@ -11,6 +11,10 @@ class ReaderException(Exception):
     pass
 
 
+class ReaderOutputException(ReaderException):
+    """Raised when ReaderOutput has not a valid structure."""
+
+
 # ---- Conversion Exceptions ---- #
 
 
@@ -69,3 +73,6 @@ class InvalidHtmlTagError(ReaderException):
     Raised when an invalid HTML Tag is provided or when it is missing
     in the document.
     """
+
+
+# ---- RecursiveJSONSplitter ---- #
