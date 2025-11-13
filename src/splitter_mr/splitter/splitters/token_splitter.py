@@ -86,12 +86,12 @@ class TokenSplitter(BaseSplitter):
         Depending on the `model_name` value, this splitter dispatches to the
         appropriate tokenization engine:
 
-            - **tiktoken:** Uses OpenAI encodings via :class:`RecursiveCharacterTextSplitter`.
-            Example model: ``tiktoken/cl100k_base``.
-            - **spaCy:** Uses the specified pipeline via :class:`SpacyTextSplitter`.
-            Example model: ``spacy/en_core_web_sm``.
-            - **NLTK:** Uses the Punkt sentence tokenizer via :class:`NLTKTextSplitter`.
-            Example model: ``nltk/punkt_tab``.
+        - **tiktoken:** Uses OpenAI encodings via :class:`RecursiveCharacterTextSplitter`.
+        Example model: ``tiktoken/cl100k_base``.
+        - **spaCy:** Uses the specified pipeline via :class:`SpacyTextSplitter`.
+        Example model: ``spacy/en_core_web_sm``.
+        - **NLTK:** Uses the Punkt sentence tokenizer via :class:`NLTKTextSplitter`.
+        Example model: ``nltk/punkt_tab``.
 
         Models or language data are downloaded automatically if missing.
 

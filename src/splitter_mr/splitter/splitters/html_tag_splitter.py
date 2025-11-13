@@ -84,17 +84,17 @@ class HTMLTagSplitter(BaseSplitter):
         """Split HTML using the configured tag and batching, then optionally convert to Markdown.
 
         Semantics:
-          Tables
-            * `batch=False`: one chunk per requested element. If splitting by a row-level tag
-              (e.g., `tr`), emit a mini-table per row with `<thead>` once and that row in `<tbody>`.
-            * `batch=True` and `chunk_size in (0, 1, None)`: all tables grouped into one chunk.
-            * `batch=True` and `chunk_size > 1`: split each table into multiple chunks by batching
-              `<tr>` rows; copy `<thead>` into every chunk and skip the header row from `<tbody>`.
+          - **Tables**
+              - `batch=False`: one chunk per requested element. If splitting by a row-level tag
+                (e.g., `tr`), emit a mini-table per row with `<thead>` once and that row in `<tbody>`.
+              - `batch=True` and `chunk_size in (0, 1, None)`: all tables grouped into one chunk.
+              - `batch=True` and `chunk_size > 1`: split each table into multiple chunks by batching
+                `<tr>` rows; copy `<thead>` into every chunk and skip the header row from `<tbody>`.
 
-          Non-table tags
-            * `batch=False`: one chunk per element.
-            * `batch=True` and `chunk_size in (0, 1, None)`: all elements grouped into one chunk.
-            * `batch=True` and `chunk_size > 1`: batch by total HTML length.
+          - **Non-table tags**
+              - `batch=False`: one chunk per element.
+              - `batch=True` and `chunk_size in (0, 1, None)`: all elements grouped into one chunk.
+              -`batch=True` and `chunk_size > 1`: batch by total HTML length.
 
         Args:
           reader_output: Reader output containing at least `text`.
