@@ -51,6 +51,24 @@ class SplitterOutputWarning(BaseSplitterWarning):
     """
 
 
+class ChunkUnderflowWarning(SplitterOutputWarning):
+    """
+    Warned when fewer chunks are produced than expected from the configured
+    chunk_size due to the number of paragraphs being insufficient.
+    """
+
+    pass
+
+
+class ChunkOverflowWarning(SplitterOutputWarning):
+    """
+    Warned when fewer chunks are produced than expected from the configured
+    chunk_size due to the number of paragraphs being insufficient.
+    """
+
+    pass
+
+
 # ---- HTMLTagSplitter ---- #
 
 

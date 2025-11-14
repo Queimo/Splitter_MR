@@ -52,10 +52,14 @@ class PagedSplitter(BaseSplitter):
             SplitterConfigException:
                 If ``chunk_size`` < 1 or ``chunk_overlap`` < 0.
         """
-        if chunk_size < 1:
-            raise SplitterConfigException("chunk_size must be ≥ 1")
-        if chunk_overlap < 0:
-            raise SplitterConfigException("chunk_overlap must be ≥ 0")
+        if chunk_size < 1 or not isinstance(chunk_size, int):
+            raise SplitterConfigException(
+                "chunk_size must be greater a positive number greater than 1"
+            )
+        if chunk_overlap < 0 or not isinstance(chunk_overlap, int):
+            raise SplitterConfigException(
+                "chunk_overlap must be a positive number greater or equal than 0"
+            )
 
         # Note: PagedSplitter uses `chunk_size` as pages-per-chunk, not characters.
         self.chunk_size = chunk_size
