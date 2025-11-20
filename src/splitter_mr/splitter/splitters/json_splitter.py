@@ -20,20 +20,20 @@ class RecursiveJSONSplitter(BaseSplitter):
     break down JSON data (including nested objects and arrays) into manageable pieces based
     on keys, arrays, or other separators, until the desired chunk size is reached.
 
+    Args:
+        chunk_size (int): Maximum chunk size, measured in the number of characters per chunk.
+        min_chunk_size (int): Minimum chunk size, in characters.
+
+    Raises:
+        SplitterConfigException: if parameters are not provided with the expected type.
+
     Notes:
         See [Langchain Docs on RecursiveJsonSplitter](https://python.langchain.com/api_reference/text_splitters/json/langchain_text_splitters.json.RecursiveJsonSplitter.html#langchain_text_splitters.json.RecursiveJsonSplitter).
     """
 
     def __init__(self, chunk_size: int = 1000, min_chunk_size: int = 200):
         """
-        Initialize the Recursive JSON Splitter class.
-
-        Args:
-            chunk_size (int): Maximum chunk size, measured in the number of characters per chunk.
-            min_chunk_size (int): Minimum chunk size, in characters.
-
-        Raises:
-            SplitterConfigException: if parameters are not provided with the expected type.
+        Initialize the RecursiveJSONSplitter class.
         """
         super().__init__(chunk_size)
 

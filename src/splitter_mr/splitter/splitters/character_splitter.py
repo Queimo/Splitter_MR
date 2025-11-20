@@ -54,15 +54,6 @@ class CharacterSplitter(BaseSplitter):
     def __init__(self, chunk_size: int = 1000, chunk_overlap: int | float = 0):
         """
         Initialize the CharacterSplitter class.
-
-        Args:
-            chunk_size (int): Maximum number of characters per chunk.
-            chunk_overlap (int | float): number of characters which matches between
-                contiguous chunks.
-
-        Raises:
-            SplitterConfigException: if chunk_size or chunk_overlap is not an integer
-                or it has an invalid value.
         """
         if not isinstance(chunk_size, int) or chunk_size < 1:
             raise SplitterConfigException("chunk_size must be an integer >= 1")

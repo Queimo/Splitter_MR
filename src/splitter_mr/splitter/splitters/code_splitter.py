@@ -65,17 +65,7 @@ class CodeSplitter(BaseSplitter):
     """
 
     def __init__(self, chunk_size: int = 1000, language: str = "python"):
-        """Initialize a ``CodeSplitter`` instance.
-
-        Args:
-            chunk_size (int, optional): Maximum number of characters per chunk.
-                Must be an integer >= 1. Defaults to 1000.
-            language (str, optional): Programming language name (case-insensitive),
-                e.g., ``"python"`` or ``"java"``. Defaults to ``"python"``.
-
-        Raises:
-            ValueError: If ``chunk_size`` is not a positive integer.
-        """
+        """Initialize the CodeSplitter class."""
         if not isinstance(chunk_size, int) or chunk_size < 1:
             raise SplitterConfigException("chunk_size must be an integer >= 1")
         super().__init__(chunk_size)

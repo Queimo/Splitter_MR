@@ -47,17 +47,6 @@ class ParagraphSplitter(BaseSplitter):
     ):
         """
         Initialize the ParagraphSplitter class.
-
-        Args:
-            chunk_size (int): the number of paragraphs per chunk.
-            chunk_overlap (int): the number of paragraphs which matches between
-                contiguous chunks.
-            line_break (str | list[str]): the character or list of characters which
-                separates chunks.
-
-        Raises:
-            SplitterConfigException: if chunk_size, chunk_overlap or line_break do not
-                have the required type or value.
         """
         if chunk_size < 1 or not isinstance(chunk_size, int):
             raise SplitterConfigException(

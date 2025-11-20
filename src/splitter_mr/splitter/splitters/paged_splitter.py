@@ -41,16 +41,7 @@ class PagedSplitter(BaseSplitter):
 
     def __init__(self, chunk_size: int = 1, chunk_overlap: int = 0):
         """
-        Initialize the PagedSplitter.
-
-        Args:
-            chunk_size (int): Number of pages per chunk.
-            chunk_overlap (int): Number of overlapping characters to include from the
-                end of the previous chunk.
-
-        Raises:
-            SplitterConfigException:
-                If ``chunk_size`` < 1 or ``chunk_overlap`` < 0.
+        Initialize the PagedSplitter class.
         """
         if chunk_size < 1 or not isinstance(chunk_size, int):
             raise SplitterConfigException(
@@ -109,8 +100,9 @@ class PagedSplitter(BaseSplitter):
 
         try:
             return self._build_output(reader_output, chunks)
+        except InvalidChunkException:
+            raise
         except (TypeError, ValueError) as exc:
-            # Normalize any unexpected construction/validation issues
             raise SplitterOutputException(
                 f"Failed to build SplitterOutput in PagedSplitter: {exc}"
             ) from exc

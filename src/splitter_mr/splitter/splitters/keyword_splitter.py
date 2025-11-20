@@ -32,6 +32,22 @@ class KeywordSplitter(BaseSplitter):
         - If the input text is empty or no matches are found, the entire text
           becomes a single chunk (subject to size-based re-chunking).
 
+    Args:
+        patterns (Union[List[str], Dict[str, str]]): A list of regex pattern strings **or** a mapping of
+            ``name -> regex pattern``. When a dict is provided, the keys are used in
+            the metadata counts. When a list is provided, synthetic names are
+            generated (``k0``, ``k1``, ...).
+        flags (int): Standard ``re`` flags combined with ``|`` (e.g., ``re.IGNORECASE``).
+        include_delimiters (str): Where to attach the matched keyword delimiter.
+            One of ``"none"``, ``"before"``, ``"after"``, ``"both"``.
+            - ``before`` (default) appends the match to the *preceding* chunk.
+            - ``after`` prepends the match to the *following* chunk.
+            - ``both`` duplicates the match on both sides.
+            - ``none`` omits the delimiter from both sides.
+        chunk_size (int): Target maximum size (in characters) for each chunk. When a
+            produced chunk exceeds this value, it is *soft*-wrapped by whitespace
+            using a greedy strategy.
+
     Raises:
         SplitterConfigException: If ``patterns``, ``include_delimiters`` or ``chunk_size``
             are invalid or regex compilation fails.
@@ -49,26 +65,7 @@ class KeywordSplitter(BaseSplitter):
         chunk_size: int = 100000,
     ) -> None:
         """
-        Initialize the KeywordSplitter.
-
-        Args:
-            patterns (Union[List[str], Dict[str, str]]): A list of regex pattern strings **or** a mapping of
-                ``name -> regex pattern``. When a dict is provided, the keys are used in
-                the metadata counts. When a list is provided, synthetic names are
-                generated (``k0``, ``k1``, ...).
-            flags (int): Standard ``re`` flags combined with ``|`` (e.g., ``re.IGNORECASE``).
-            include_delimiters (str): Where to attach the matched keyword delimiter.
-                One of ``"none"``, ``"before"``, ``"after"``, ``"both"``.
-                - ``before`` (default) appends the match to the *preceding* chunk.
-                - ``after`` prepends the match to the *following* chunk.
-                - ``both`` duplicates the match on both sides.
-                - ``none`` omits the delimiter from both sides.
-            chunk_size (int): Target maximum size (in characters) for each chunk. When a
-                produced chunk exceeds this value, it is *soft*-wrapped by whitespace
-                using a greedy strategy.
-
-        Raises:
-            SplitterConfigException: If configuration is inconsistent or invalid.
+        Initialize the KeywordSplitter class.
         """
         # Basic config validation at construction time
         if chunk_size <= 0 or not isinstance(chunk_size, int):

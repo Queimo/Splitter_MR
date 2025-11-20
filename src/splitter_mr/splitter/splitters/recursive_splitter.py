@@ -23,6 +23,20 @@ class RecursiveCharacterSplitter(BaseSplitter):
     where each chunk is created by repeatedly breaking down the text until it reaches the
     desired chunk size. This splitter is backed by LangChain's
     :class:`RecursiveCharacterTextSplitter`.
+
+    Args:
+        chunk_size (int): the number of characters per chunks (approximately).
+        chunk_overlap (int | float): the number of characters which matches between
+            contiguous chunks, or a fraction of chunk_size when 0 <= value < 1.
+        separators (str | List[str]): the list of characters or regex patterns which
+            defines how text is split.
+
+    Raises:
+        SplitterConfigException:
+            If ``chunk_size`` is less than 1, ``chunk_overlap`` is negative or
+            effectively greater than or equal to ``chunk_size``, or ``separators`` is
+            neither a non-empty string nor a sequence of strings with at least one
+            non-empty entry.
     """
 
     def __init__(
@@ -33,20 +47,6 @@ class RecursiveCharacterSplitter(BaseSplitter):
     ):
         """
         Initialize the RecursiveCharacterSplitter class.
-
-        Args:
-            chunk_size (int): the number of characters per chunks (approximately).
-            chunk_overlap (int | float): the number of characters which matches between
-                contiguous chunks, or a fraction of chunk_size when 0 <= value < 1.
-            separators (str | List[str]): the list of characters or regex patterns which
-                defines how text is split.
-
-        Raises:
-            SplitterConfigException:
-                If ``chunk_size`` is less than 1, ``chunk_overlap`` is negative or
-                effectively greater than or equal to ``chunk_size``, or ``separators`` is
-                neither a non-empty string nor a sequence of strings with at least one
-                non-empty entry.
         """
         if not isinstance(chunk_size, int) or chunk_size < 1:
             raise SplitterConfigException(

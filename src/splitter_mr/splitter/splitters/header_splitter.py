@@ -44,6 +44,9 @@ class HeaderSplitter(BaseSplitter):
         group_header_with_content: If ``True`` (default), headers are kept with their
             following content (``strip_headers=False``). If ``False``, headers are removed
             from the chunks (``strip_headers=True``).
+
+    Raises:
+        InvalidHeaderNameError: If any header is not present in ``ALLOWED_HEADERS``.
     """
 
     def __init__(
@@ -53,17 +56,7 @@ class HeaderSplitter(BaseSplitter):
         *,
         group_header_with_content: bool = True,
     ):
-        """Initialize the HeaderSplitter.
-
-        Args:
-            chunk_size: Used by the fallback character splitter if no headers are found.
-            headers_to_split_on: Semantic headers, e.g., ``("Header 1", "Header 2")``.
-                Defaults to all allowed levels defined in ``ALLOWED_HEADERS``.
-            group_header_with_content: Keep headers attached to following content if ``True``.
-
-        Raises:
-            InvalidHeaderNameError: If any header is not present in ``ALLOWED_HEADERS``.
-        """
+        """Initialize the HeaderSplitter."""
         super().__init__(chunk_size)
 
         # Use immutable default and validate any user-supplied values.
