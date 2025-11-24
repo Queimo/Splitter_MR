@@ -20,7 +20,7 @@ reader_output = reader.read(file)
 print(reader_output)
 ```
 
-    text='id,name,amount,Remark\n1,"Johnson, Smith, and Jones Co.",345.33,Pays on time\n2,"Sam ""Mad Dog"" Smith",993.44,\n3,Barney & Company,0,"Great to work with and always pays with cash."\n4,Johnson\'s Automotive,2344,' document_name='invoices.csv' document_path='https://raw.githubusercontent.com/andreshere00/Splitter_MR/refs/heads/main/data/invoices.csv' document_id='587fd2ce-2a41-4ab2-a9ad-f09ba3db1fe3' conversion_method='txt' reader_method='vanilla' ocr_method=None page_placeholder=None metadata={}
+    text='id,name,amount,Remark\n1,"Johnson, Smith, and Jones Co.",345.33,Pays on time\n2,"Sam ""Mad Dog"" Smith",993.44,\n3,Barney & Company,0,"Great to work with and always pays with cash."\n4,Johnson\'s Automotive,2344,' document_name='invoices.csv' document_path='https://raw.githubusercontent.com/andreshere00/Splitter_MR/refs/heads/main/data/invoices.csv' document_id='ecea0dd3-d7aa-466d-a285-eebb58b62a3a' conversion_method='txt' reader_method='vanilla' ocr_method=None page_placeholder=None metadata={}
 
 
 
@@ -122,16 +122,14 @@ for idx, chunk in enumerate(splitter_output.chunks):
 ```
 
     ======================================== Chunk 1 ========================================
-    |   id | name                          |   amount | Remark       |
-    |-----:|:------------------------------|---------:|:-------------|
-    |    1 | Johnson, Smith, and Jones Co. |   345.33 | Pays on time |
-    |    2 | Sam "Mad Dog" Smith           |   993.44 | nan          |
+    id,name,amount,Remark
+    1,"Johnson, Smith, and Jones Co.",345.33,Pays on time
+    2,"Sam ""Mad Dog"" Smith",993.44,
     
     ======================================== Chunk 2 ========================================
-    |   id | name                 |   amount | Remark                                        |
-    |-----:|:---------------------|---------:|:----------------------------------------------|
-    |    3 | Barney & Company     |        0 | Great to work with and always pays with cash. |
-    |    4 | Johnson's Automotive |     2344 | nan                                           |
+    id,name,amount,Remark
+    3,Barney & Company,0.0,Great to work with and always pays with cash.
+    4,Johnson's Automotive,2344.0,
     
 
 
@@ -180,7 +178,7 @@ Use [`chunk_overlap`](https://andreshere00.github.io/Splitter_MR/api_reference/s
 
 
 ```python
-splitter = RowColumnSplitter(chunk_size=150, chunk_overlap=0.2)
+splitter = RowColumnSplitter(chunk_size=180, chunk_overlap=0.2)
 splitter_output = splitter.split(reader_output)
 
 for idx, chunk in enumerate(splitter_output.chunks):
@@ -200,7 +198,7 @@ for idx, chunk in enumerate(splitter_output.chunks):
     ======================================== Chunk 3 ========================================
     | id   | name   | amount   | Remark   |
     |------|--------|----------|----------|
-    
+    |    3 | Barney & Company |        0 | Great to work with and always pays with cash. |
     
     ======================================== Chunk 4 ========================================
     | id   | name   | amount   | Remark   |

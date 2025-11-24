@@ -6,6 +6,8 @@ from openai import OpenAI
 
 from ...schema import (
     DEFAULT_IMAGE_CAPTION_PROMPT,
+    DEFAULT_IMAGE_EXTENSION,
+    DEFAULT_OPENAI_MODEL,
     OPENAI_MIME_BY_EXTENSION,
     SUPPORTED_OPENAI_MIME_TYPES,
     OpenAIClientImageContent,
@@ -27,7 +29,7 @@ class OpenAIVisionModel(BaseVisionModel):
     def __init__(
         self,
         api_key: Optional[str] = None,
-        model_name: str = os.getenv("OPENAI_MODEL", "gpt-4o"),
+        model_name: str = os.getenv("OPENAI_MODEL", DEFAULT_OPENAI_MODEL),
     ) -> None:
         """
         Initialize the OpenAIVisionModel.
@@ -63,7 +65,7 @@ class OpenAIVisionModel(BaseVisionModel):
         file: Optional[bytes],
         prompt: str = DEFAULT_IMAGE_CAPTION_PROMPT,
         *,
-        file_ext: Optional[str] = "png",
+        file_ext: Optional[str] = DEFAULT_IMAGE_EXTENSION,
         **parameters: Any,
     ) -> str:
         """
@@ -108,9 +110,9 @@ class OpenAIVisionModel(BaseVisionModel):
         if file is None:
             raise ValueError("No file content provided for text extraction.")
 
-        ext = (file_ext or "png").lower()
+        ext = (file_ext or DEFAULT_IMAGE_EXTENSION).lower()
         mime_type = (
-            OPENAI_MIME_BY_EXTENSION.get(ext)  # noqa: W503
+            OPENAI_MIME_BY_EXTENSION.get(ext)
             or mimetypes.types_map.get(f".{ext}")  # noqa: W503
             or "image/png"  # noqa: W503
         )

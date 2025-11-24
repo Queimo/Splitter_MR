@@ -26,7 +26,7 @@ print(reader_output.model_dump_json(indent=4))
     tural del Toboso, nombre a su parecer músico y peregrino y significativo, como todos los demás que a él y a sus cosas había puesto.",
         "document_name": "quijote_example.txt",
         "document_path": "https://raw.githubusercontent.com/andreshere00/Splitter_MR/refs/heads/main/data/quijote_example.txt",
-        "document_id": "955e6c5b-3779-4328-a1aa-c3e7a60a4cfd",
+        "document_id": "fdbbad6f-bfca-41c2-be76-22b4af7bf119",
         "conversion_method": "txt",
         "reader_method": "vanilla",
         "ocr_method": null,
@@ -92,11 +92,11 @@ print(char_splitter_output.model_dump_json(indent=4))
             "aca que carnero, salpicón las más noches, duelos y quebrantos los sábados, lentejas los viernes, alg",
             "ún palomino de añadid
     ...
-    3f-5343-4cb3-8df5-cb6aa27aaf91"
+    5d-db06-4304-acec-f9ee581f4110"
         ],
         "document_name": "quijote_example.txt",
         "document_path": "https://raw.githubusercontent.com/andreshere00/Splitter_MR/refs/heads/main/data/quijote_example.txt",
-        "document_id": "955e6c5b-3779-4328-a1aa-c3e7a60a4cfd",
+        "document_id": "fdbbad6f-bfca-41c2-be76-22b4af7bf119",
         "conversion_method": "txt",
         "reader_method": "vanilla",
         "ocr_method": null,

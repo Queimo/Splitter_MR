@@ -37,7 +37,7 @@ print(reader_output.model_dump_json(indent=4))
     On the weekends we all play board games together. We laugh and always have a good time. I love my family very much.",
         "document_name": "my_wonderful_family.txt",
         "document_path": "https://raw.githubusercontent.com/andreshere00/Splitter_MR/refs/heads/main/data/my_wonderful_family.txt",
-        "document_id": "5dc57f34-8bd2-4cfb-9442-7324a0b814ec",
+        "document_id": "ca4c32e4-2b42-4ae3-beb1-b60fa9d44c38",
         "conversion_method": "markdown",
         "reader_method": "markitdown",
         "ocr_method": null,
@@ -92,12 +92,18 @@ spacy_output = spacy_splitter.split(reader_output)
 print(spacy_output)  # See the SplitterOutput object
 ```
 
-    chunks=['My Wonderful Family\nI live in a house near the mountains.', 'I have two brothers and one sister, and I was born last.', 'My father teaches mathematics, and my mother is a nurse at a big hospital.', 'My brothers are very smart and work hard in school.', 'My sister is a nervous girl, but she is very kind.\n\nMy grandmother also lives with us.', 'She came from Italy when I was two years old.\n\nShe has grown old, but she is still very strong.', 'She cooks the best food!\n\n\n\nMy family i
+    Collecting en-core-web-sm==3.8.0
+      Downloading https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl (12.8 MB)
+    [2K     [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m12.8/12.8 MB[0m [31m59.7 MB/s[0m  [33m0:00:00[0m eta [36m0:00:01[0m
+    [?25hInstalling collected packages: en-core-web-sm
+    Successfully installed en-core-web-sm-3.8.0
+    [38;5;2m✔ Download and installation successful[0m
+    You can now load the package via spac
     ...
-     'a3b56da5-c885-43d5-8846-b0329f232af7', '6cf64509-b3f8-4a60-92f4-5006a4693e8a'] document_name='my_wonderful_family.txt' document_path='https://raw.githubusercontent.com/andreshere00/Splitter_MR/refs/heads/main/data/my_wonderful_family.txt' document_id='4798e9f9-4a0e-4453-8924-78748c6402d4' conversion_method='markdown' reader_method='markitdown' ocr_method=None split_method='token_splitter' split_params={'chunk_size': 100, 'model_name': 'spacy/en_core_web_sm', 'language': 'english'} metadata={}
+     'c4c23979-fd3e-415b-a403-d3e958fbbf3e', 'c26e1d36-04f2-4bc9-9c41-9e03ce93fe7b'] document_name='my_wonderful_family.txt' document_path='https://raw.githubusercontent.com/andreshere00/Splitter_MR/refs/heads/main/data/my_wonderful_family.txt' document_id='ca4c32e4-2b42-4ae3-beb1-b60fa9d44c38' conversion_method='markdown' reader_method='markitdown' ocr_method=None split_method='token_splitter' split_params={'chunk_size': 100, 'model_name': 'spacy/en_core_web_sm', 'language': 'english'} metadata={}
 
 
-    /Users/aherencia/Documents/Projects/Splitter_MR/.venv/lib/python3.12/site-packages/spacy/pipeline/lemmatizer.py:188: UserWarning: [W108] The rule-based lemmatizer did not find POS annotation for one or more tokens. Check that your pipeline includes components that assign token.pos, typically 'tagger'+'attribute_ruler' or 'morphologizer'.
+    /Users/aherencia/Documents/Projects/Splitter_MR/.venv/lib/python3.13/site-packages/spacy/pipeline/lemmatizer.py:188: UserWarning: [W108] The rule-based lemmatizer did not find POS annotation for one or more tokens. Check that your pipeline includes components that assign token.pos, typically 'tagger'+'attribute_ruler' or 'morphologizer'.
       warnings.warn(Warnings.W108)
 
 
@@ -158,6 +164,10 @@ for idx, chunk in enumerate(nltk_output.chunks):
     print("=" * 40 + f" Chunk {idx + 1} " + "=" * 40 + "\n" + chunk + "\n")
 ```
 
+    [nltk_data] Downloading package punkt_tab to
+    [nltk_data]     /Users/aherencia/nltk_data...
+
+
     ======================================== Chunk 1 ========================================
     My Wonderful Family
     I live in a house near the mountains.
@@ -185,6 +195,9 @@ for idx, chunk in enumerate(nltk_output.chunks):
     
     I love my family very much.
     
+
+
+    [nltk_data]   Unzipping tokenizers/punkt_tab.zip.
 
 
 
@@ -235,6 +248,10 @@ sp_reader_output = sp_reader.read(sp_file)
 print(sp_reader_output.text)
 ```
 
+    /Users/aherencia/Documents/Projects/Splitter_MR/src/splitter_mr/reader/readers/docling_reader.py:89: UserWarning: Unsupported extension 'txt'. Using VanillaReader.
+      warnings.warn(msg)
+
+
     Mi nueva casa
     Yo vivo en Granada, una ciudad pequeña que tiene monumentos muy importantes como la Alhambra. Aquí la comida es deliciosa y son famosos el gazpacho, el rebujito y el salmorejo.
     
@@ -243,10 +260,6 @@ print(sp_reader_output.text)
     Me gusta mucho mi casa porque puedo invitar a mis amigos a cenar o a ver el fútbol en mi televisión. Además, cerca de mi casa hay muchas tiendas para hacer la compra, como panadería, carnicería y pescadería.
     
     
-
-
-    /Users/aherencia/Documents/Projects/Splitter_MR/src/splitter_mr/reader/readers/docling_reader.py:87: UserWarning: Unsupported extension 'txt'. Using VanillaReader.
-      warnings.warn(msg)
 
 
 
@@ -264,8 +277,21 @@ for idx, chunk in enumerate(spacy_sp_output.chunks):
     print("=" * 40 + f" Chunk {idx + 1} " + "=" * 40 + "\n" + chunk + "\n")
 ```
 
-    Created a chunk of size 107, which is longer than the specified 100
-    Created a chunk of size 142, which is longer than the specified 100
+    Collecting es-core-news-sm==3.8.0
+      Downloading https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.8.0/es_core_news_sm-3.8.0-py3-none-any.whl (12.9 MB)
+    [2K     [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m12.9/12.9 MB[0m [31m52.8 MB/s[0m  [33m0:00:00[0m eta [36m0:00:01[0m
+    [?25hInstalling collected packages: es-core-news-sm
+    Successfully installed es-core-news-sm-3.8.0
+    [38;5;2m✔ Download and installation successful[0m
+    You can now load the package via spacy.load('es_core_news_sm')
+    [38;5;3m⚠ Restart to reload dependencies[0m
+    If you are in a Jupyter or Colab notebook, you may need to restart Python in
+    order to load all the package's dependencies. You can do this by selecting the
+    'Restart kernel' or 'Restart runtime' option.
+
+
+    2025-11-25 00:21:19,856 - WARNING - Created a chunk of size 107, which is longer than the specified 100
+    2025-11-25 00:21:19,859 - WARNING - Created a chunk of size 142, which is longer than the specified 100
 
 
     ======================================== Chunk 1 ========================================
@@ -303,8 +329,11 @@ for idx, chunk in enumerate(nltk_sp_output.chunks):
     print("=" * 40 + f" Chunk {idx + 1} " + "=" * 40 + "\n" + chunk + "\n")
 ```
 
-    Created a chunk of size 107, which is longer than the specified 100
-    Created a chunk of size 142, which is longer than the specified 100
+    [nltk_data] Downloading package punkt_tab to
+    [nltk_data]     /Users/aherencia/nltk_data...
+    [nltk_data]   Package punkt_tab is already up-to-date!
+    2025-11-25 00:21:19,906 - WARNING - Created a chunk of size 107, which is longer than the specified 100
+    2025-11-25 00:21:19,907 - WARNING - Created a chunk of size 142, which is longer than the specified 100
 
 
     ======================================== Chunk 1 ========================================
@@ -446,11 +475,21 @@ for idx, chunk in enumerate(nltk_sp_output.chunks):
     **************************************** spaCy ****************************************
 
 
-    /Users/aherencia/Documents/Projects/Splitter_MR/.venv/lib/python3.12/site-packages/spacy/pipeline/lemmatizer.py:188: UserWarning: [W108] The rule-based lemmatizer did not find POS annotation for one or more tokens. Check that your pipeline includes components that assign token.pos, typically 'tagger'+'attribute_ruler' or 'morphologizer'.
+    /Users/aherencia/Documents/Projects/Splitter_MR/.venv/lib/python3.13/site-packages/spacy/pipeline/lemmatizer.py:188: UserWarning: [W108] The rule-based lemmatizer did not find POS annotation for one or more tokens. Check that your pipeline includes components that assign token.pos, typically 'tagger'+'attribute_ruler' or 'morphologizer'.
       warnings.warn(Warnings.W108)
+    [nltk_data] Downloading package punkt_tab to
+    [nltk_data]     /Users/aherencia/nltk_data...
+    [nltk_data]   Package punkt_tab is already up-to-date!
 
 
-    chunks=['My Wonderful Family\nI live in a house near the mountains.', 'I have two brothers and one sister, and I was born last.', 'My father teaches mathematics, and my mother is a nurse at a big hospital.', 'My brothers are very smart and work hard in school.', 'My sister is a nervous girl, but she is very kind.\n\nMy grandmother also lives with us.', 'She came from Italy when I was two years old.\n\nShe has grown old, but she is still very strong.', 'She cooks the best food!\n\n\n\nMy family i
+    {
+        "chunks": [
+            "My Wonderful Family\nI live in a house near the mountains.",
+            "I have two brothers and one sister, and I was born last.",
+            "My father teaches mathematics, and my mother is a nurse at a big hospital.",
+            "My brothers are very smart and work hard in school.",
+            "My sister is a nervous girl, but she is very kind.\n\nMy grandmother also lives with us.",
+            "She came from Italy when I was two years old.\n\nShe has grown old, but she is still v
     ...
     uy grande, un comedor con una mesa y seis sillas, un salón con dos sofás verdes, una televisión y cortinas. Además, tiene una pequeña terraza con piscina donde puedo tomar el sol en verano.
     
@@ -460,10 +499,13 @@ for idx, chunk in enumerate(nltk_sp_output.chunks):
     **************************************** Spacy in Spanish ****************************************
 
 
-    Created a chunk of size 107, which is longer than the specified 100
-    Created a chunk of size 142, which is longer than the specified 100
-    Created a chunk of size 107, which is longer than the specified 100
-    Created a chunk of size 142, which is longer than the specified 100
+    2025-11-25 00:21:20,780 - WARNING - Created a chunk of size 107, which is longer than the specified 100
+    2025-11-25 00:21:20,780 - WARNING - Created a chunk of size 142, which is longer than the specified 100
+    [nltk_data] Downloading package punkt_tab to
+    [nltk_data]     /Users/aherencia/nltk_data...
+    [nltk_data]   Package punkt_tab is already up-to-date!
+    2025-11-25 00:21:20,782 - WARNING - Created a chunk of size 107, which is longer than the specified 100
+    2025-11-25 00:21:20,782 - WARNING - Created a chunk of size 142, which is longer than the specified 100
 
 
     ======================================== Chunk 1 ========================================
@@ -515,7 +557,7 @@ TokenSplitter(model_name="nltk/punkt", language=language)
 
 
 
-    <splitter_mr.splitter.splitters.token_splitter.TokenSplitter at 0x3106e42c0>
+    <splitter_mr.splitter.splitters.token_splitter.TokenSplitter at 0x33571c5f0>
 
 
 
@@ -531,7 +573,7 @@ TokenSplitter(model_name=f"tiktoken/{encoder}")
 
 
 
-    <splitter_mr.splitter.splitters.token_splitter.TokenSplitter at 0x315f1d7c0>
+    <splitter_mr.splitter.splitters.token_splitter.TokenSplitter at 0x31d9d35c0>
 
 
 
@@ -549,6 +591,6 @@ TokenSplitter(model_name=f"spacy/{encoder}")
 
 
 
-    <splitter_mr.splitter.splitters.token_splitter.TokenSplitter at 0x3280d74a0>
+    <splitter_mr.splitter.splitters.token_splitter.TokenSplitter at 0x33542f150>
 
 

@@ -9,6 +9,8 @@ from ...model import BaseVisionModel
 from ...schema import (
     DEFAULT_IMAGE_CAPTION_PROMPT,
     DEFAULT_IMAGE_EXTRACTION_PROMPT,
+    DEFAULT_IMAGE_PLACEHOLDER,
+    DEFAULT_PAGE_PLACEHOLDER,
     SUPPORTED_DOCLING_FILE_EXTENSIONS,
     ReaderOutput,
 )
@@ -91,7 +93,9 @@ class DoclingReader(BaseReader):
         pipeline_name, pipeline_args = self._select_pipeline(file_path, ext, **kwargs)
         md = DoclingPipelineFactory.run(pipeline_name, file_path, **pipeline_args)
 
-        page_placeholder: str = pipeline_args.get("page_placeholder", "<!-- page -->")
+        page_placeholder: str = pipeline_args.get(
+            "page_placeholder", DEFAULT_PAGE_PLACEHOLDER
+        )
         page_placeholder_value = (
             page_placeholder if page_placeholder and page_placeholder in md else None
         )
@@ -137,8 +141,10 @@ class DoclingReader(BaseReader):
         """
         # Defaults
         show_base64_images: bool = kwargs.get("show_base64_images", False)
-        page_placeholder: str = kwargs.get("page_placeholder", "<!-- page -->")
-        image_placeholder: str = kwargs.get("image_placeholder", "<!-- image -->")
+        page_placeholder: str = kwargs.get("page_placeholder", DEFAULT_PAGE_PLACEHOLDER)
+        image_placeholder: str = kwargs.get(
+            "image_placeholder", DEFAULT_IMAGE_PLACEHOLDER
+        )
         image_resolution: float = kwargs.get("image_resolution", 1.0)
         scan_pdf_pages: bool = kwargs.get("scan_pdf_pages", False)
 

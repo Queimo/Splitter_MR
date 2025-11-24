@@ -7,13 +7,20 @@ from google import genai
 from google.genai import types
 
 from ...model import BaseVisionModel
+from ...schema import (
+    DEFAULT_GEMINI_VISION_MODEL,
+    DEFAULT_IMAGE_CAPTION_PROMPT,
+    DEFAULT_IMAGE_EXTENSION,
+)
 
 
 class GeminiVisionModel(BaseVisionModel):
     """Implementation of `BaseVisionModel` using Google's Gemini Image Understanding API."""
 
     def __init__(
-        self, api_key: Optional[str] = None, model_name: str = "gemini-2.5-flash"
+        self,
+        api_key: Optional[str] = None,
+        model_name: str = DEFAULT_GEMINI_VISION_MODEL,
     ) -> None:
         """
         Initialize the GeminiVisionModel.
@@ -46,17 +53,17 @@ class GeminiVisionModel(BaseVisionModel):
 
     def analyze_content(
         self,
-        prompt: str,
         file: Optional[bytes],
-        file_ext: Optional[str] = None,
+        prompt: str = DEFAULT_IMAGE_CAPTION_PROMPT,
+        file_ext: Optional[str] = DEFAULT_IMAGE_EXTENSION,
         **parameters: Any,
     ) -> str:
         """Extract text from an image using Gemini's image understanding API."""
         if file is None:
             raise ValueError("No image file provided for extraction.")
 
-        ext = (file_ext or "jpg").lower()
-        mime_type = mimetypes.types_map.get(f".{ext}", "image/jpeg")
+        ext = (file_ext or DEFAULT_IMAGE_EXTENSION).lower()
+        mime_type = mimetypes.types_map.get(f".{ext}", "image/png")
 
         img_b64 = file.decode("utf-8") if isinstance(file, (bytes, bytearray)) else file
         try:

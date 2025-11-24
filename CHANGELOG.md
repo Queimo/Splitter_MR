@@ -2,6 +2,21 @@
 
 > **Version 1.0.0: First stable release with full Reader, Splitter, Embedding and Vision model support.**
 
+## v1.1.0
+
+- Add new custom errors and exceptions for Splitters.
+
+### Features
+
+- Add error handling in Splitter components.
+- Add warnings in case that some process does not work as expected (but they produce output).
+- Refactor code to use constants and be more modularizable.
+
+### Documentation
+
+- Fix some docstrings for better readability.
+- Update docstring documentation
+
 ## v1.0.1
 
 Add **KeywordSplitter** to split by regex patterns or specific keywords.

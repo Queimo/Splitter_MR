@@ -19,7 +19,7 @@ except ImportError:
     TorchDevice = object
 
 # ------- #
-# READERS #
+# Readers #
 # ------- #
 
 
@@ -109,7 +109,7 @@ class ReaderOutput(BaseModel):
 
 
 # --------- #
-# SPLITTERS #
+# Splitters #
 # --------- #
 
 
@@ -158,7 +158,8 @@ class SplitterOutput(BaseModel):
         if self.chunk_id is not None:
             if len(self.chunk_id) != len(self.chunks):
                 raise ValueError(
-                    f"chunk_id length ({len(self.chunk_id)}) does not match chunks length ({len(self.chunks)})."
+                    f"chunk_id length ({len(self.chunk_id)}) "
+                    f"does not match chunks length ({len(self.chunks)})."
                 )
         else:
             self.chunk_id = [str(uuid.uuid4()) for _ in self.chunks]
@@ -170,7 +171,8 @@ class SplitterOutput(BaseModel):
 
     @classmethod
     def from_chunks(cls, chunks: List[str]) -> "SplitterOutput":
-        """Create a SplitterOutput from a list of chunks, with all other fields set to their defaults.
+        """Create a SplitterOutput from a list of chunks, with all other
+        fields set to their defaults.
 
         Args:
             chunks (List[str]): A list of text chunks.
@@ -193,7 +195,7 @@ class SplitterOutput(BaseModel):
 
 
 # ------ #
-# MODELS #
+# Models #
 # ------ #
 
 # -------------------------- #
@@ -259,8 +261,12 @@ class OpenAIClientPayload(BaseModel):
 
 
 class HFChatImageContent(BaseModel):
-    """
-    TODO: Add docstrings using Google docstyle
+    """Image content block for Hugging Face chat-style payloads.
+
+    Attributes:
+        type: Constant literal ``"image"`` indicating an image content block.
+        image: A data URI or URL pointing to the image
+            (e.g., ``"data:image/png;base64,..."``).
     """
 
     type: Literal["image"]
@@ -268,8 +274,11 @@ class HFChatImageContent(BaseModel):
 
 
 class HFChatTextContent(BaseModel):
-    """
-    TODO: Add docstrings using Google docstyle
+    """Text content block for Hugging Face chat-style payloads.
+
+    Attributes:
+        type: Constant literal ``"text"`` indicating a text content block.
+        text: The textual content of the message.
     """
 
     type: Literal["text"]
@@ -277,8 +286,13 @@ class HFChatTextContent(BaseModel):
 
 
 class HFChatMessage(BaseModel):
-    """
-    TODO: Add docstrings using Google docstyle
+    """Single chat message for Hugging Face chat-style interfaces.
+
+    Attributes:
+        role: The speaker role, one of ``"user"``, ``"system"``, or ``"assistant"``.
+        content: Ordered list of content blocks that make up the message. Each element
+            can be a text block (:class:`HFChatTextContent`) or an image block
+            (:class:`HFChatImageContent`).
     """
 
     role: Literal["user", "system", "assistant"]
@@ -286,21 +300,37 @@ class HFChatMessage(BaseModel):
 
 
 class HFClient(BaseModel):
-    """
-    Lightweight client holder for vision models.
+    """Lightweight container for Hugging Face vision models and related utilities.
+
+    Attributes:
+        model: The underlying model instance (e.g., a ``transformers`` model).
+        processor: The processor/feature extractor paired with the model.
+        tokenizer: Optional tokenizer used for text processing if required by the model.
+        device: Torch device where inference will run (e.g., ``"cpu"``, ``"cuda"``,
+            or an instance of :class:`torch.device`).
     """
 
     model: Any
     processor: Any
     tokenizer: Optional[Any] = None
-    device: TorchDevice
+    device: torch.device = "cpu"
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @field_validator("device", mode="before")
     @classmethod
     def _coerce_device(cls, v):
-        # Only coerce if torch is available
+        """Coerce the provided value into a :class:`torch.device` when possible.
+
+        If PyTorch is not installed, the value is returned unchanged.
+
+        Args:
+            v: The incoming device value (e.g., ``"cpu"``, ``"cuda"``, or a ``torch.device``).
+
+        Returns:
+            The normalized device value. If PyTorch is available, returns a ``torch.device``.
+            Otherwise, returns the original value.
+        """
         try:
             import torch
 
@@ -312,4 +342,12 @@ class HFClient(BaseModel):
 
     @field_serializer("device")
     def _serialize_device(self, v) -> str:
+        """Serialize the device field to a string representation.
+
+        Args:
+            v: The device value to serialize.
+
+        Returns:
+            The string form of the device (e.g., ``"cpu"`` or ``"cuda:0"``).
+        """
         return str(v)

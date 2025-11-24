@@ -14,7 +14,12 @@ from docling_core.types.doc import ImageRefMode
 from PIL.Image import Image
 
 from ...model import BaseVisionModel
-from ...schema import DEFAULT_IMAGE_CAPTION_PROMPT, DEFAULT_IMAGE_EXTRACTION_PROMPT
+from ...schema import (
+    DEFAULT_IMAGE_CAPTION_PROMPT,
+    DEFAULT_IMAGE_EXTRACTION_PROMPT,
+    DEFAULT_IMAGE_PLACEHOLDER,
+    DEFAULT_PAGE_PLACEHOLDER,
+)
 
 # from urllib.parse import urlencode, urljoin
 
@@ -30,7 +35,7 @@ def page_image_pipeline(
     prompt: str = DEFAULT_IMAGE_EXTRACTION_PROMPT,
     image_resolution: float = 1.0,
     show_base64_images: bool = False,
-    page_placeholder: str = "<!-- page -->",
+    page_placeholder: str = DEFAULT_PAGE_PLACEHOLDER,
 ) -> str:
     """
     Processes a PDF by extracting each page as an image, then running a vision-language model on each page image.
@@ -104,9 +109,9 @@ def vlm_pipeline(
     file_path: str | Path,
     model: BaseVisionModel = None,
     prompt: str = DEFAULT_IMAGE_CAPTION_PROMPT,
-    page_placeholder: str = "<!-- page -->",
+    page_placeholder: str = DEFAULT_PAGE_PLACEHOLDER,
     image_resolution: float = 1.0,
-    image_placeholder: str = "<!-- image -->",
+    image_placeholder: str = DEFAULT_IMAGE_PLACEHOLDER,
 ) -> str:
     """
     Processes a PDF using a remote Vision-Language Model (VLM) pipeline, returning the result as Markdown.
@@ -195,8 +200,8 @@ def vlm_pipeline(
 def markdown_pipeline(
     file_path: str | Path,
     show_base64_images: bool = True,
-    page_placeholder: str = "<!-- page -->",
-    image_placeholder: str = "<!-- image -->",
+    page_placeholder: str = DEFAULT_PAGE_PLACEHOLDER,
+    image_placeholder: str = DEFAULT_IMAGE_PLACEHOLDER,
     image_resolution: float = 1.0,
     ext: str = "pdf",
 ) -> str:

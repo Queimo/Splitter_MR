@@ -6,6 +6,7 @@ from openai import AzureOpenAI
 
 from ...schema import (
     DEFAULT_IMAGE_CAPTION_PROMPT,
+    DEFAULT_IMAGE_EXTENSION,
     OPENAI_MIME_BY_EXTENSION,
     SUPPORTED_OPENAI_MIME_TYPES,
     OpenAIClientImageContent,
@@ -85,7 +86,7 @@ class AzureOpenAIVisionModel(BaseVisionModel):
         self,
         file: Optional[bytes],
         prompt: str = DEFAULT_IMAGE_CAPTION_PROMPT,
-        file_ext: Optional[str] = "png",
+        file_ext: Optional[str] = DEFAULT_IMAGE_EXTENSION,
         **parameters: Any,
     ) -> str:
         """
@@ -125,7 +126,7 @@ class AzureOpenAIVisionModel(BaseVisionModel):
         if file is None:
             raise ValueError("No file content provided to be analyzed with the VLM.")
 
-        ext = (file_ext or "png").lower()
+        ext = (file_ext or DEFAULT_IMAGE_EXTENSION).lower()
         mime_type = (
             OPENAI_MIME_BY_EXTENSION.get(ext)  # noqa: W503
             or mimetypes.types_map.get(f".{ext}")  # noqa: W503
