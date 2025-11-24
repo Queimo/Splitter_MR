@@ -109,9 +109,8 @@ class TokenSplitter(BaseSplitter):
             ChunkUnderflowWarning:
                 If no chunks are produced from a non-empty input.
 
-        Examples:
-
-            Basic usage with `tiktoken`:
+        Example:
+            Basic usage with **tiktoken**:
 
             ```python
             from splitter_mr.splitter import TokenSplitter
@@ -131,7 +130,7 @@ class TokenSplitter(BaseSplitter):
             print(output.chunks)
             ```
 
-            Using spaCy:
+            Using **spaCy**:
 
             ```python
             splitter = TokenSplitter(
@@ -142,7 +141,7 @@ class TokenSplitter(BaseSplitter):
             print(output.chunks)
             ```
 
-            Using NLTK:
+            Using **NLTK**:
 
             ```python
             splitter = TokenSplitter(

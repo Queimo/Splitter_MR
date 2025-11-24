@@ -121,6 +121,44 @@ class RecursiveCharacterSplitter(BaseSplitter):
             SplitterOutputWarning:
                 When no chunks are produced and the splitter falls back to a single
                 empty chunk.
+
+
+        Example:
+            **Basic usage** with a simple text string:
+
+            ```python
+            from splitter_mr.schema import ReaderOutput
+            from splitter_mr.splitter import RecursiveCharacterSplitter
+
+            # Sample text (short for demonstration)
+            text = (
+                "LangChain makes it easy to build LLM-powered applications. "
+                "Recursive splitting helps maintain semantic coherence while "
+                "still enforcing chunk-size limits."
+            )
+
+            reader_output = ReaderOutput(
+                text=text,
+                document_name="example.txt",
+                document_path="/tmp/example.txt",
+                document_id="abc123",
+                conversion_method="text",
+                metadata={}
+            )
+
+            splitter = RecursiveCharacterSplitter(
+                chunk_size=50,
+                chunk_overlap=0.2,  # 20% of chunk_size overlap
+                separators=["\\n\\n", ".", " "]  # recursive fallback separators
+            )
+
+            output = splitter.split(reader_output)
+
+            # Inspect results
+            print(output.chunks)
+            print(output.chunk_id)
+            print(output.split_params)
+            ```
         """
         # Validate input
         if not hasattr(reader_output, "text"):

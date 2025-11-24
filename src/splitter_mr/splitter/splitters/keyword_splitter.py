@@ -111,8 +111,114 @@ class KeywordSplitter(BaseSplitter):
             SplitterOutputException: If constructing the output object fails.
 
         Example:
-            Basic usage with a **list** of patterns:
-            ...
+            **Basic usage** with a **list** of patterns:
+
+            ```python
+            from splitter_mr.schema import ReaderOutput
+            from splitter_mr.splitter.splitters import KeywordSplitter
+
+            text = "Alpha KEY Beta KEY Gamma"
+            ro = ReaderOutput(
+                text=text,
+                document_name="demo.txt",
+                document_path="/tmp/demo.txt",
+            )
+
+            splitter = KeywordSplitter(patterns=[r"KEY"])
+            out = splitter.split(ro)
+
+            print(out.chunks)
+            ```
+
+            ```python
+            ['Alpha KEY', 'Beta KEY', 'Gamma']
+            ```
+
+            Using a **`dict` of named patterns** (names appear in metadata):
+
+            ```python
+            patterns = {
+                "plus": r"\\+",
+                "minus": r"-",
+            }
+            text = "A + B - C + D"
+            ro = ReaderOutput(text=text)
+
+            splitter = KeywordSplitter(patterns=patterns)
+            out = splitter.split(ro)
+
+            print(out.chunks)
+            ```
+
+            ```python
+            ['A +', 'B -', 'C +', 'D']
+            ```
+
+            ```python
+            print(out.metadata["keyword_matches"]["counts"])
+            ```
+
+            ```json
+            {'plus': 2, 'minus': 1}
+            ```
+
+            Demonstrating ``include_delimiters`` modes:
+
+            ```python
+            text = "A#B#C"
+
+            splitter = KeywordSplitter(patterns=[r"#"], include_delimiters="after")
+            out = splitter.split(ReaderOutput(text=text))
+            print(out.chunks)
+            ```
+
+            ```python
+            ['A#', 'B#', 'C']
+            ```
+
+            ```python
+            splitter = KeywordSplitter(patterns=[r"#"], include_delimiters="none")
+            out = splitter.split(ReaderOutput(text=text))
+            print(out.chunks)
+            ```
+
+            ```python
+            ['A', 'B', 'C']
+            ```
+
+            Example showing **size-based soft wrapping** (`chunk_size=5`):
+
+            ```python
+            text = "abcdefghijklmnopqrstuvwxyz"
+            splitter = KeywordSplitter(patterns=[r"x"], chunk_size=5)
+            ```
+
+            ```python
+            out = splitter.split(ReaderOutput(text=text))
+            print(out.chunks)
+            ```
+
+            ```python
+            ['abcde', 'fghij', 'klmno', 'pqrst', 'uvwxy', 'z']
+            ```
+
+            Example with **multiple patterns and mixed text**:
+
+            ```python
+            splitter = KeywordSplitter(
+                patterns=[r"ERROR", r"WARNING"],
+                include_delimiters="after",
+            )
+
+            log = "INFO Start\\nERROR Failure occurred\\nWARNING Low RAM\\nINFO End"
+            out = splitter.split(ReaderOutput(text=log))
+
+            print(out.chunks)
+            ```
+
+            ```python
+            ['INFO Start\\nERROR', 'Failure occurred\\nWARNING', 'Low RAM\\nINFO End']
+            ```
         """
         if not hasattr(reader_output, "text"):
             raise ReaderOutputException(

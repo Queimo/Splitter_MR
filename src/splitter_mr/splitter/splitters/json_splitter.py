@@ -82,9 +82,7 @@ class RecursiveJSONSplitter(BaseSplitter):
             print(output["chunks"])
             ```
             ```python
-            ['{"company": {"name": "TechCorp"}}',
-            '{"employees": [{"name": "Alice"},
-            {"name": "Bob"}]}']
+            ['{"company": {"name": "TechCorp"}}', '{"employees": [{"name": "Alice"}, {"name": "Bob"}]}']
             ```
 
         Raises:

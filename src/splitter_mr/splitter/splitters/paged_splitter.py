@@ -90,6 +90,90 @@ class PagedSplitter(BaseSplitter):
             SplitterOutputWarning:
                 When no non-empty pages are found after splitting on the placeholder
                 and the splitter falls back to a single empty chunk.
+
+        Example:
+            **Basic usage** with a simple placeholder:
+
+            ```python
+            from splitter_mr.schema import ReaderOutput
+            from splitter_mr.splitter.splitters import PagedSplitter
+
+            text = "<!-- page -->Page 1<!-- page -->Page 2<!-- page -->Page 3"
+            ro = ReaderOutput(
+                text=text,
+                page_placeholder="<!-- page -->",
+                document_name="demo.txt",
+                document_path="/tmp/demo.txt",
+            )
+
+            splitter = PagedSplitter(chunk_size=1, chunk_overlap=0)
+            out = splitter.split(ro)
+
+            print(out.chunks)
+            ```
+            ```python
+            ['Page 1', 'Page 2', 'Page 3']
+            ```
+
+            Grouping **multiple pages** into a single chunk:
+
+            ```python
+            splitter = PagedSplitter(chunk_size=2)
+            out = splitter.split(ro)
+
+            print(out.chunks)
+            ```
+            ```python
+            ['Page 1\\nPage 2', 'Page 3']
+            ```
+
+            Applying **character-based overlap** between chunks:
+
+            ```python
+            text = "<p>One</p><!-- page --><p>Two</p><!-- page --><p>Three</p>"
+            ro = ReaderOutput(text=text, page_placeholder="<!-- page -->")
+
+            # Overlap last 5 characters from each previous chunk
+            splitter = PagedSplitter(chunk_size=1, chunk_overlap=5)
+            out = splitter.split(ro)
+
+            print(out.chunks)
+            ```
+            ```python
+            ['<p>One</p>', 'ne</p><p>Two</p>', 'o</p><p>Three</p>']
+            ```
+
+            **Metadata propagation**:
+
+            ```python
+            ro = ReaderOutput(
+                text="<!-- page -->A<!-- page -->B",
+                page_placeholder="<!-- page -->",
+                document_name="source.txt",
+                document_path="/tmp/source.txt",
+                document_id="abc123",
+            )
+
+            splitter = PagedSplitter(chunk_size=1)
+            out = splitter.split(ro)
+
+            print(out.document_name)
+            ```
+            ```python
+            'source.txt'
+            ```
+            ```python
+            print(out.split_method)
+            ```
+            ```python
+            'paged_splitter'
+            ```
+            ```python
+            print(out.split_params)
+            ```
+            ```python
+            {'chunk_size': 1, 'chunk_overlap': 0}
+            ```
         """
         text, page_placeholder = self._validate_reader_output(reader_output)
         pages = self._split_into_pages(text, page_placeholder)

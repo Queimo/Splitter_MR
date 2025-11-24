@@ -267,6 +267,61 @@ class SemanticSplitter(BaseSplitter):
               segments are merged forward.
             - The `buffer_size` defines how much contextual overlap each sentence
               has for embedding (e.g., 1 = one sentence on either side).
+
+        Example:
+            **Basic usage** with a **custom embedding backend**:
+
+            ```python
+            from splitter_mr.schema import ReaderOutput
+            from splitter_mr.splitter.splitters.semantic_splitter import SemanticSplitter
+            from splitter_mr.embedding import BaseEmbedding
+
+            class DummyEmbedding(BaseEmbedding):
+                \"\"\"Minimal embedding backend for demonstration purposes.\"\"\"
+                model_name = "dummy-semantic-model"
+
+                def embed_documents(self, texts: list[str]) -> list[list[float]]:
+                    # Return a simple fixed-length vector per text
+                    dim = 8
+                    return [[float(i) for i in range(dim)] for _ in texts]
+
+            text = (
+                "Cats like to sleep in the sun. "
+                "They often chase laser pointers. "
+                "Neural networks can classify animal images. "
+                "Transformers are widely used in NLP."
+            )
+
+            ro = ReaderOutput(text=text, document_name="semantic_demo.txt")
+
+            splitter = SemanticSplitter(
+                embedding=DummyEmbedding(),
+                buffer_size=1,
+                breakpoint_threshold_type="percentile",
+                breakpoint_threshold_amount=75.0,
+                chunk_size=50,
+            )
+
+            output = splitter.split(ro)
+
+            print(output.chunks)
+            ```
+
+            Targeting a **specific number of chunks**:
+
+            ```python
+            splitter = SemanticSplitter(
+                embedding=DummyEmbedding(),
+                buffer_size=1,
+                number_of_chunks=3,
+                chunk_size=40,
+            )
+
+            output = splitter.split(ro)
+            print(output.chunks)          # ~3 semantic chunks (subject to document length)
+            print(output.split_method)    # "semantic_splitter"
+            print(output.split_params)    # includes threshold config and model name
+            ```
         """
         text: str = reader_output.text
         if text is None or text.strip() == "":

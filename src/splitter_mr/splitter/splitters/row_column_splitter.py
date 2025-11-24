@@ -176,6 +176,123 @@ class RowColumnSplitter(BaseSplitter):
             SplitterOutputWarning:
                 If non-empty text produces an empty DataFrame, which may
                 indicate malformed input.
+
+        Example:
+            Splitting a **CSV table** by **rows** with **overlap**:
+
+            ```python
+            from splitter_mr.schema import ReaderOutput
+            from splitter_mr.splitter.splitters import RowColumnSplitter
+
+            csv_text = (
+                "id,name,amount\\n"
+                "1,A,10\\n"
+                "2,B,20\\n"
+                "3,C,30\\n"
+                "4,D,40\\n"
+            )
+
+            ro = ReaderOutput(
+                text=csv_text,
+                conversion_method="csv",
+                document_name="payments.csv",
+                document_path="/tmp/payments.csv",
+                document_id="payments-1",
+            )
+
+            splitter = RowColumnSplitter(
+                num_rows=2,          # 2 rows per chunk
+                chunk_overlap=1,     # reuse last 1 row in the next chunk
+            )
+            out = splitter.split(ro)
+
+            print(out.chunks)
+            ```
+            ```python
+            [
+              'id,name,amount\\n1,A,10\\n2,B,20',
+              'id,name,amount\\n2,B,20\\n3,C,30',
+              'id,name,amount\\n3,C,30\\n4,D,40',
+            ]
+            ```
+
+            ```python
+            print(out.metadata["chunks"][0])
+            ```
+            ```python
+            {'rows': [0, 1], 'type': 'row'}
+            ```
+
+            Splitting a CSV table by **columns**::
+
+            ```python
+            splitter = RowColumnSplitter(
+                num_cols=2,          # 2 columns per chunk
+                chunk_overlap=1,     # reuse 1 column in the next chunk
+            )
+            out = splitter.split(ro)
+
+            print(out.chunks)
+            ```
+            ```python
+            [['id', 1, 2, 3, 4], ['name', 'A', 'B', 'C', 'D']]
+            ```
+            print(out.metadata["chunks"][0])
+            ```python
+            {'cols': ['id', 'name'], 'type': 'column'}
+            ```
+
+            Splitting by **character-based chunk size** (markdown output)::
+
+            ```python
+            md_text = '''
+            | id | name | amount |
+            |----|------|--------|
+            | 1  | A    | 10     |
+            | 2  | B    | 20     |
+            | 3  | C    | 30     |
+            | 4  | D    | 40     |
+            '''.strip()
+
+            ro = ReaderOutput(
+                text=md_text,
+                conversion_method="markdown",
+                document_name="table.md",
+            )
+
+            splitter = RowColumnSplitter(
+                chunk_size=80,        # max ~80 chars per chunk
+                chunk_overlap=0.25,   # 25% row overlap between chunks
+            )
+            out = splitter.split(ro)
+
+            for i, (chunk, meta) in enumerate(
+                zip(out.chunks, out.metadata["chunks"]), start=1
+            ):
+                print(f"--- CHUNK {i} ---")
+                print(chunk)
+                print("rows:", meta["rows"])   # original row indices
+            ```
+
+            Handling **unknown conversion_method** with JSON/CSV fallback::
+
+            ```python
+            json_text = '''
+            [
+                {"id": 1, "name": "A", "amount": 10},
+                {"id": 2, "name": "B", "amount": 20}
+            ]
+            '''.strip()
+
+            ro = ReaderOutput(
+                text=json_text,
+                conversion_method="unknown",   # triggers JSON → CSV fallback logic
+            )
+
+            splitter = RowColumnSplitter(num_rows=1)
+            out = splitter.split(ro)
+            print(out.chunks)
+            ```
         """
         # Minimal ReaderOutput validation (type-level issues)
         if not hasattr(reader_output, "text"):
@@ -397,11 +514,14 @@ class RowColumnSplitter(BaseSplitter):
         row_md_list = [self._get_markdown_row(df, i) for i in range(len(df))]
         row_len_list = [len(r) + 1 for r in row_md_list]  # +1 for newline
 
-        # Config error: size too small to fit header + one row
-        if row_md_list and self.chunk_size < header_length + row_len_list[0]:
-            raise SplitterConfigException(
-                "chunk_size is too small to fit header and at least one row."
-            )
+        # Input validation
+        if row_md_list:
+            min_required = header_length + max(row_len_list)
+            if self.chunk_size < min_required:
+                raise SplitterConfigException(
+                    "chunk_size is too small to fit the header and at least one row; "
+                    f"minimum required is {min_required}, got {self.chunk_size}."
+                )
 
         i = 0
         n = len(row_md_list)

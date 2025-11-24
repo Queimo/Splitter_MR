@@ -25,7 +25,7 @@ print(reader_output.model_dump_json(indent=4))  # Show metadata and summary
         "text": "[\n  {\n    \"id\": 1,\n    \"name\": \"Johnson, Smith, and Jones Co.\",\n    \"amount\": 345.33,\n    \"Remark\": \"Pays on time\"\n  },\n  {\n    \"id\": 2,\n    \"name\": \"Sam \\\"Mad Dog\\\" Smith\",\n    \"amount\": 993.44,\n    \"Remark\": \"\"\n  },\n  {\n    \"id\": 3,\n    \"name\": \"Barney & Company\",\n    \"amount\": 0,\n    \"Remark\": \"Great to work with\\nand always pays with cash.\"\n  },\n  {\n    \"id\": 4,\n    \"name\": \"Johnson's Automotive\",\n    \"amount\": 2344,\n    \"Remark\": \"\"\n  }\n]",
         "document_name": "invoices.json",
         "document_path": "https://raw.githubusercontent.com/andreshere00/Splitter_MR/refs/heads/main/data/invoices.json",
-        "document_id": "aeb021c6-9707-4058-8b3b-73313e50e3c2",
+        "document_id": "81fcaa4b-5bdb-472b-bd5c-e37f3f386463",
         "conversion_method": "json",
         "reader_method": "vanilla",
         "ocr_method": null,
@@ -103,11 +103,11 @@ print(splitter_output.model_dump_json(indent=4))  # Show the SplitterOutput obje
             "{\"2\": {\"id\": 3, \"name\": \"Barney & Company\", \"amount\": 0, \"Remark\": \"Great to work with\\nand always pays with cash.\"}}",
             "{\"3\": {\"id\": 4, \"name\": \"Johnson's Automotive\", \"amount\": 2344, \"Remark\": \"\"}
     ...
-    0c-a890-4ec4-959c-d2c9e533f5d2"
+    b6-0558-444d-a81d-78aa46553e50"
         ],
         "document_name": "invoices.json",
         "document_path": "https://raw.githubusercontent.com/andreshere00/Splitter_MR/refs/heads/main/data/invoices.json",
-        "document_id": "aeb021c6-9707-4058-8b3b-73313e50e3c2",
+        "document_id": "81fcaa4b-5bdb-472b-bd5c-e37f3f386463",
         "conversion_method": "json",
         "reader_method": "vanilla",
         "ocr_method": null,

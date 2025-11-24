@@ -88,11 +88,14 @@ class HeaderSplitter(BaseSplitter):
         Returns:
             SplitterOutput: A populated splitter output with chunk contents and metadata.
 
+        Warnings:
+            SplitterInputWarning: if text field in ReaderOutput is missing or void.
+
         Raises:
-            ValueError: If ``reader_output.text`` is empty.
+            HtmlConversionError: if HTML Conversion fails.
 
         Example:
-            Basic Markdown input with default headers (H1–H6), keeping headers with content:
+            Basic Markdown input with **default headers** (H1–H6), keeping headers with content:
 
             ```python
             from splitter_mr.splitter import HeaderSplitter
@@ -112,7 +115,6 @@ class HeaderSplitter(BaseSplitter):
             out = splitter.split(ro)
             print(out.chunks)
             ```
-            Possible output (simplified):
             ```python
             [
                 "# Title\\nIntro paragraph.",
@@ -121,7 +123,7 @@ class HeaderSplitter(BaseSplitter):
             ]
             ```
 
-            HTML input with a restricted set of headers and stripping headers from chunks:
+            HTML input with a **restricted set of headers and stripping headers** from chunks:
 
             ```python
             html = (
@@ -142,19 +144,12 @@ class HeaderSplitter(BaseSplitter):
             out = splitter.split(ro)
             print(out.chunks)
             ```
-            Possible output (simplified):
             ```python
             [
                 "Intro paragraph.",
                 "Content A.\\nSub A.1\\nDetail A.1"
             ]
             ```
-
-        Warnings:
-            SplitterInputWarning: if text field in ReaderOutput is missing or void.
-
-        Raises:
-            HtmlConversionError: if HTML Conversion fails.
         """
         text: str = reader_output.text
         if text is None or not str(text).strip():

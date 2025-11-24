@@ -99,6 +99,99 @@ class HTMLTagSplitter(BaseSplitter):
           InvalidHtmlTagError: If the tag lookup (`find_all`) fails due to an invalid tag.
           SplitterOutputException: If building the final `SplitterOutput` fails.
 
+        Example:
+            **Basic usage** splitting **all `<div>` elements**:
+
+            ```python
+            from splitter_mr.schema import ReaderOutput
+            from splitter_mr.splitter.splitters import HTMLTagSplitter
+
+            html = '''
+            <div>First block</div>
+            <div>Second block</div>
+            <div>Third block</div>
+            '''
+
+            ro = ReaderOutput(
+                text=html,
+                document_name="sample.html",
+                document_path="/tmp/sample.html",
+            )
+
+            splitter = HTMLTagSplitter(chunk_size=10, tag="div", batch=False)
+            output = splitter.split(ro)
+
+            print(output.chunks)
+            ```
+
+            ```python
+            ['<div>First block</div>','<div>Second block</div>','<div>Third block</div>']
+            ```
+
+            Example with **batching** (all `<p>` elements grouped into one chunk)::
+
+            ```python
+            html = "<p>A</p><p>B</p><p>C</p>"
+            ro = ReaderOutput(text=html, document_name="demo.html")
+
+            splitter = HTMLTagSplitter(chunk_size=1, tag="p", batch=True)
+            out = splitter.split(ro)
+
+            print(out.chunks[0])
+            ```
+
+            ```python
+            '<p>A</p>\\n<p>B</p>\\n<p>C</p>'
+            ```
+
+            Example with **table batching** (each chunk contains a header and 2 rows):
+
+            ```python
+            html = '''
+            <table>
+                <thead><tr><th>H1</th><th>H2</th></tr></thead>
+                <tbody>
+                    <tr><td>A</td><td>1</td></tr>
+                    <tr><td>B</td><td>2</td></tr>
+                    <tr><td>C</td><td>3</td></tr>
+                </tbody>
+            </table>
+            '''
+
+            ro = ReaderOutput(text=html, document_name="table.html")
+
+            splitter = HTMLTagSplitter(
+                chunk_size=2,       # batch <tr> rows in groups of 2
+                tag="tr",           # split by table rows
+                batch=True,
+            )
+            out = splitter.split(ro)
+
+            for i, c in enumerate(out.chunks, 1):
+                print(f"--- CHUNK {i} ---")
+                print(c)
+            ```
+
+            Example **enabling Markdown conversion**:
+
+            ```python
+            html = "<h1>Title</h1><p>Paragraph text</p>"
+            ro = ReaderOutput(text=html)
+
+            splitter = HTMLTagSplitter(
+                chunk_size=5,
+                tag=None,
+                batch=False,
+                to_markdown=True,
+            )
+            out = splitter.split(ro)
+
+            print(out.chunks)
+            ```
+            ```python
+            ['# Title', 'Paragraph text']
+            ```
+
         Notes:
           If the input text is empty/whitespace-only, a warning is emitted and
           a single empty chunk is returned.

@@ -4,7 +4,7 @@
 
 ## v1.1.0
 
-Add error handling and traceability for all the components in the library.
+- Add new custom errors and exceptions for Splitters.
 
 ### Features
 
@@ -15,6 +15,7 @@ Add error handling and traceability for all the components in the library.
 ### Documentation
 
 - Fix some docstrings for better readability.
+- Update docstring documentation
 
 ## v1.0.1
 

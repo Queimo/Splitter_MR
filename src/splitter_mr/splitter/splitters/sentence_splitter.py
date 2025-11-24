@@ -145,7 +145,6 @@ class SentenceSplitter(BaseSplitter):
             ```python
             ['My Wonderful Family. I live in a house near the mountains.', 'I have two brothers and one sister, and I was born last...', ...]
             ```
-            ```
         """
         text = self._validate_reader_output(reader_output)
         sentences = self._split_into_sentences(text)

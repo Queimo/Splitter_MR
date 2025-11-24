@@ -130,7 +130,7 @@ def test_chunk_size_too_small():
     reader_output = make_reader_output(md_table, "markdown")
     with pytest.raises(
         SplitterConfigException,
-        match="chunk_size is too small to fit header and at least one row.",
+        match=r"chunk_size is too small to fit the header and at least one row;",
     ):
         splitter.split(reader_output)
 

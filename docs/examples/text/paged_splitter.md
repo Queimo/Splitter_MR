@@ -77,7 +77,7 @@ print(reader_output)
 
     text='Provided proper attribution is provided, Google hereby grants permission to reproduce the tables and figures in this paper solely for use in journalistic or scholarly works.\n\n## Attention Is All You Need\n\nAshish Vaswani ∗ Google Brain avaswani@google.com\n\nNoam Shazeer ∗ Google Brain noam@google.com\n\nLlion Jones ∗ Google Research llion@google.com\n\nNiki Parmar ∗ Google Research nikip@google.com\n\nAidan N. Gomez ∗ † University of Toronto aidan@cs.toronto.edu\n\nJakob Uszkoreit ∗ Go
     ...
-    ion: A network visualization illustrating the connections and relationships among words and phrases within two different data sets or contexts.' document_name='attention.pdf' document_path='https://raw.githubusercontent.com/andreshere00/Splitter_MR/refs/heads/main/data/attention.pdf' document_id='e2c1aaf0-802c-4257-b8a3-a60532312a28' conversion_method='markdown' reader_method='docling' ocr_method='es-BPE_GENAI_CLASSIFIER_AGENT-llm-lab-class-4_1-nano' page_placeholder='<!-- page -->' metadata={}
+     A network graph illustrating the connections between words in two different color-coded groups, highlighting their relationships and patterns.' document_name='attention.pdf' document_path='https://raw.githubusercontent.com/andreshere00/Splitter_MR/refs/heads/main/data/attention.pdf' document_id='ce224089-78b8-4af9-bfff-c187649d11e9' conversion_method='markdown' reader_method='docling' ocr_method='es-BPE_GENAI_CLASSIFIER_AGENT-llm-lab-class-4_1-nano' page_placeholder='<!-- page -->' metadata={}
 
 
 !!! note
@@ -96,7 +96,9 @@ So, we can simply instantiate the `PageSplitter` object and use the `split` meth
 from splitter_mr.splitter import PagedSplitter
 from splitter_mr.splitter import KeywordSplitter
 
-splitter = KeywordSplitter(patterns="attention")
+splitter = KeywordSplitter(
+    patterns=["attention"]
+)  # splitter = KeywordSplitter(patterns={"attention": r"attention"})  # NOSONAR (S125)
 splitter_output = splitter.split(reader_output=reader_output)
 
 splitter = PagedSplitter()
@@ -120,14 +122,14 @@ for idx, chunk in enumerate(splitter_output.chunks):
     
     Llion Jones ∗ Google Resear
     ...
-    *******************************************
+    ***************************************
     
     Input-Input Layer5
     
     Figure 5: Many of the attention heads exhibit behaviour that seems related to the structure of the sentence. We give two such examples above, from two different heads from the encoder self-attention at layer 5 of 6. The heads clearly learned to perform different tasks.
     
     <!-- image -->
-    *Caption: A network visualization illustrating the connections and relationships among words and phrases within two different data sets or contexts.
+    *Caption: A network graph illustrating the connections between words in two different color-coded groups, highlighting their relationships and patterns.
 
 
 
@@ -160,10 +162,13 @@ for idx, chunk in enumerate(splitter_output.chunks):
     
     Llion Jones ∗ Google Resear
     ...
-    give two such examples above, from two different heads from the encoder self-attention at layer 5 of 6. The heads clearly learned to perform different tasks.
+    ences and importance of specific words.*
+    Input-Input Layer5
+    
+    Figure 5: Many of the attention heads exhibit behaviour that seems related to the structure of the sentence. We give two such examples above, from two different heads from the encoder self-attention at layer 5 of 6. The heads clearly learned to perform different tasks.
     
     <!-- image -->
-    *Caption: A pair of interconnected word association networks visually illustrating how the words "The," "Law," "will," "never," "be," "perfect," "but," "its," "application," "should," "this," "what," "we," "are," "missing," "in," "my," "opinion," "VCSO," and "ad" relate to each other through varying degrees of association.*
+    *Caption: A network graph illustrating the connections between words in two different color-coded groups, highlighting their relationships and patterns.
 
 
 
