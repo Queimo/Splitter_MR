@@ -32,9 +32,6 @@ class RecursiveJSONSplitter(BaseSplitter):
     """
 
     def __init__(self, chunk_size: int = 1000, min_chunk_size: int = 200):
-        """
-        Initialize the RecursiveJSONSplitter class.
-        """
         super().__init__(chunk_size)
 
         if not isinstance(chunk_size, int):

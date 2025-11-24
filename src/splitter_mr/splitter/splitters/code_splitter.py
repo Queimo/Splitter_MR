@@ -65,7 +65,6 @@ class CodeSplitter(BaseSplitter):
     """
 
     def __init__(self, chunk_size: int = 1000, language: str = "python"):
-        """Initialize the CodeSplitter class."""
         if not isinstance(chunk_size, int) or chunk_size < 1:
             raise SplitterConfigException("chunk_size must be an integer >= 1")
         super().__init__(chunk_size)

@@ -74,6 +74,45 @@ class SemanticSplitter(BaseSplitter):
     - Pick breakpoints using a thresholding strategy, or aim for `number_of_chunks`.
     - Join sentences between breakpoints; enforce minimum size via `chunk_size`.
 
+    Args:
+        embedding: Embedding backend implementing an ``embed_documents(texts: List[str])``
+            method. Typically wraps a model from OpenAI, Azure, or a local
+            embedding model.
+        buffer_size: Number of neighbouring sentences to include on each side
+            when building the contextual window for each sentence. A value of
+            ``1`` means "current sentence plus one sentence to the left and
+            one to the right" (where available).
+        breakpoint_threshold_type: Strategy used to decide where to place
+            breakpoints. Supported values are:
+
+            * ``"percentile"`` – cut where distances exceed a percentile
+              of the distance distribution.
+            * ``"standard_deviation"`` – cut where distances exceed
+              ``mean + k * std``.
+            * ``"interquartile"`` – cut where distances exceed
+              ``mean + k * IQR``.
+            * ``"gradient"`` – cut where the *gradient* of distances
+              exceeds a percentile threshold.
+        breakpoint_threshold_amount: Strength of the threshold for the
+            chosen strategy. Meaning depends on ``breakpoint_threshold_type``:
+
+            * For ``"percentile"`` / ``"gradient"``:
+              value in ``[0, 100]`` interpreted as a percentile, or a
+              value in ``(0, 1]`` interpreted as a ratio and automatically
+              scaled to ``[0, 100]``.
+            * For ``"standard_deviation"`` / ``"interquartile"``:
+              finite multiplier ``k`` applied to the deviation term
+              (std or IQR).
+            If ``None``, a default from ``DEFAULT_BREAKPOINTS`` is used.
+        number_of_chunks: Desired number of output chunks. When provided,
+            the splitter selects the largest distances to approximate this
+            target (subject to document length and `chunk_size`). Must be a
+            positive, finite value; non-integers are allowed but will be
+            truncated internally.
+        chunk_size: Minimum allowed chunk size in characters. Short segments
+            below this size are merged forward to avoid excessively small,
+            fragmented chunks.
+
     Raises:
         SplitterConfigException:
             - If `embedding` does not provide an `embed_documents` method.
@@ -85,9 +124,9 @@ class SemanticSplitter(BaseSplitter):
     Warnings:
         SplitterInputWarning:
             - If `breakpoint_threshold_amount` in (0, 1] is auto-scaled as
-                a ratio to a percentile in [0, 100].
+              a ratio to a percentile in [0, 100].
             - If `number_of_chunks` is not an integer; it will be truncated
-                when used internally.
+              when used internally.
     """
 
     def __init__(
@@ -100,7 +139,6 @@ class SemanticSplitter(BaseSplitter):
         number_of_chunks: Optional[int] = None,
         chunk_size: int = 1000,
     ) -> None:
-        """Initialize the SemanticSplitter class."""
         super().__init__(chunk_size=chunk_size)
 
         # Validate embedding backend

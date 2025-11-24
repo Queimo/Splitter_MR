@@ -40,9 +40,6 @@ class PagedSplitter(BaseSplitter):
     """
 
     def __init__(self, chunk_size: int = 1, chunk_overlap: int = 0):
-        """
-        Initialize the PagedSplitter class.
-        """
         if chunk_size < 1 or not isinstance(chunk_size, int):
             raise SplitterConfigException(
                 "chunk_size must be greater a positive number greater than 1"

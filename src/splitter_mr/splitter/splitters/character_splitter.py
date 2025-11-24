@@ -32,29 +32,9 @@ class CharacterSplitter(BaseSplitter):
 
     Raises:
         SplitterConfigException: If either ``chunk_size`` or ``chunk_overlap`` are invalid.
-
-    Example:
-        ```python
-        from splitter_mr.splitter import CharacterSplitter
-        from splitter_mr.schema.models import ReaderOutput
-
-        reader_output = ReaderOutput(
-            text="abcdefghijklmnopqrstuvwxyz",
-            document_name="doc.txt",
-            document_path="/path/doc.txt",
-        )
-
-        splitter = CharacterSplitter(chunk_size=5, chunk_overlap=2)
-        output = splitter.split(reader_output)
-        print(output.chunks)
-        # ['abcde', 'defgh', 'ghijk', ..., 'yz']
-        ```
     """
 
     def __init__(self, chunk_size: int = 1000, chunk_overlap: int | float = 0):
-        """
-        Initialize the CharacterSplitter class.
-        """
         if not isinstance(chunk_size, int) or chunk_size < 1:
             raise SplitterConfigException("chunk_size must be an integer >= 1")
 

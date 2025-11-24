@@ -56,7 +56,6 @@ class HeaderSplitter(BaseSplitter):
         *,
         group_header_with_content: bool = True,
     ):
-        """Initialize the HeaderSplitter."""
         super().__init__(chunk_size)
 
         # Use immutable default and validate any user-supplied values.

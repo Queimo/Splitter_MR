@@ -82,9 +82,6 @@ class RowColumnSplitter(BaseSplitter):
         num_cols: int = 0,
         chunk_overlap: Union[int, float] = 0,
     ):
-        """
-        Initialize the RowColumnSplitter class.
-        """
         super().__init__(chunk_size)
         self.num_rows = num_rows
         self.num_cols = num_cols
@@ -250,7 +247,9 @@ class RowColumnSplitter(BaseSplitter):
                 f"Failed to build SplitterOutput in RowColumnSplitter: {exc}"
             ) from exc
 
-    # ---- Splitting strategies ---- #
+    # ---- Internal helpers ---- #
+
+    # Splitting strategies
 
     def _split_by_rows(
         self,

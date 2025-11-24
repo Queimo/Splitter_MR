@@ -126,6 +126,26 @@ class SentenceSplitter(BaseSplitter):
             ChunkUnderflowWarning:
                 When fewer chunks than ``chunk_size`` are produced because the input
                 has too few sentences.
+
+        Example:
+            ```python
+            from splitter_mr.splitter import SentenceSplitter
+
+            reader_output = ReaderOutput(
+                text: "My Wonderful Family\\nI live in a house near the mountains.I have two brothers and one sister, and I was born last...",
+                document_name: "my_wonderful_family.txt",
+                document_path: "https://raw.githubusercontent.com/andreshere00/Splitter_MR/refs/heads/main/data/my_wonderful_family.txt",
+            )
+
+            # Split into chunks of 2 sentences, no overlapping
+            splitter = SentenceSplitter(chunk_size=2, chunk_overlap=0)
+            output = splitter.split(reader_output)
+            print(output["chunks"])
+            ```
+            ```python
+            ['My Wonderful Family. I live in a house near the mountains.', 'I have two brothers and one sister, and I was born last...', ...]
+            ```
+            ```
         """
         text = self._validate_reader_output(reader_output)
         sentences = self._split_into_sentences(text)

@@ -64,9 +64,6 @@ class KeywordSplitter(BaseSplitter):
         include_delimiters: str = DEFAULT_KEYWORD_DELIMITER_POS,
         chunk_size: int = 100000,
     ) -> None:
-        """
-        Initialize the KeywordSplitter class.
-        """
         # Basic config validation at construction time
         if chunk_size <= 0 or not isinstance(chunk_size, int):
             raise SplitterConfigException(

@@ -45,9 +45,6 @@ class ParagraphSplitter(BaseSplitter):
         chunk_overlap: Union[int, float] = 0,
         line_break: Union[str, List[str]] = DEFAULT_PARAGRAPH_SEPARATORS,
     ):
-        """
-        Initialize the ParagraphSplitter class.
-        """
         if chunk_size < 1 or not isinstance(chunk_size, int):
             raise SplitterConfigException(
                 "chunk_size must be a positive number greater than 1"
@@ -114,6 +111,66 @@ class ParagraphSplitter(BaseSplitter):
             SplitterOutputWarning:
                 When no non-empty paragraphs are found, causing the splitter to fall
                 back to a single empty chunk.
+
+        Example:
+            **Basic usage** with default line breaks and no overlap:
+
+                ```python
+                from splitter_mr.schema import ReaderOutput
+                from splitter_mr.splitter.splitters import ParagraphSplitter
+
+                text = (
+                    "First paragraph.\\n\\n"
+                    "Second paragraph with more text.\\n\\n"
+                    "Third paragraph."
+                )
+
+                ro = ReaderOutput(
+                    text=text,
+                    document_name="example.txt",
+                    document_path="/tmp/example.txt",
+                    document_id="doc-1",
+                    conversion_method="text",
+                    reader_method="plain",
+                    ocr_method=None,
+                    metadata={},
+                )
+
+                splitter = ParagraphSplitter(chunk_size=2, chunk_overlap=0)
+                output = splitter.split(ro)
+
+                print(output.chunks)
+                # ['First paragraph.\\n\\nSecond paragraph with more text.',
+                #  'Third paragraph.']
+                ```
+
+                ```python
+                ['First paragraph.\\n\\nSecond paragraph with more text.', 'Third paragraph.']
+                ````
+
+            Example with **custom line breaks** and **word overlap** between chunks:
+
+                ```python
+                text = (
+                    "Intro paragraph.@@"
+                    "Details paragraph one.@@"
+                    "Details paragraph two.@@"
+                    "Conclusion paragraph."
+                )
+
+                ro = ReaderOutput(text=text, document_name="custom_sep.txt")
+
+                splitter = ParagraphSplitter(
+                    chunk_size=2,
+                    chunk_overlap=3, # reuse last 3 words from previous chunk
+                    line_break="@@", # custom paragraph separator
+                )
+                output = splitter.split(ro)
+
+                for chunk in output.chunks:
+                    print("--- CHUNK ---")
+                    print(chunk)
+                ```
         """
         text = self._validate_reader_output(reader_output)
         paragraphs = self._split_into_paragraphs(text)

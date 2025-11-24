@@ -37,7 +37,7 @@ class HTMLTagSplitter(BaseSplitter):
 
     Args:
         chunk_size: Maximum chunk size in characters for batching. If `0`, `1`,
-          or `None`, batching groups all elements into a single chunk.
+            or `None`, batching groups all elements into a single chunk.
         tag: HTML tag to split on (e.g., `"div"`). If `None`, the tag is auto-detected.
         batch: If True, group elements up to `chunk_size`. If False, emit one chunk per element.
         to_markdown: If True, convert each emitted chunk from HTML to Markdown.
@@ -55,7 +55,6 @@ class HTMLTagSplitter(BaseSplitter):
         batch: bool = True,
         to_markdown: bool = True,
     ):
-        """Initialize the HTMLTagSplitter class."""
         super().__init__(chunk_size)
         if chunk_size is not None and (
             not isinstance(chunk_size, int) or chunk_size < 0

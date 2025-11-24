@@ -1,6 +1,6 @@
 import warnings
 from pathlib import Path
-from typing import Callable, Tuple
+from typing import Callable, List, Tuple
 
 import nltk
 import spacy
@@ -46,6 +46,9 @@ class TokenSplitter(BaseSplitter):
             * ``nltk/punkt_tab`` (NLTK Punkt tokenizer variant)
         language: Language code for the NLTK tokenizer (for example, ``"english"``).
 
+    Raises:
+        SplitterConfigException: If ``chunk_size`` is not a positive integer.
+
     Notes:
         See the LangChain documentation for more details about splitting
         by tokens:
@@ -58,17 +61,6 @@ class TokenSplitter(BaseSplitter):
         model_name: str = DEFAULT_TOKENIZER,
         language: str = DEFAULT_TOKEN_LANGUAGE,
     ):
-        """Initialize a TokenSplitter instance.
-
-        Args:
-            chunk_size: Maximum number of tokens per chunk. Must be a positive
-                integer.
-            model_name: Tokenizer and model in the format ``tokenizer/model``.
-            language: Language code for NLTK-based tokenization.
-
-        Raises:
-            SplitterConfigException: If ``chunk_size`` is not a positive integer.
-        """
         if chunk_size <= 0:
             raise SplitterConfigException(
                 f"chunk_size must be a positive integer, got {chunk_size!r}."
@@ -212,11 +204,11 @@ class TokenSplitter(BaseSplitter):
     # ---- Internal helpers ---- #
 
     @staticmethod
-    def list_nltk_punkt_languages():
+    def list_nltk_punkt_languages() -> List[str]:
         """Return a sorted list of available NLTK Punkt models.
 
         Returns:
-            A sorted list of language codes corresponding to available
+            model_list(List[str]): A sorted list of language codes corresponding to available
             Punkt sentence tokenizer models in the local NLTK data path.
         """
         models = set()
@@ -224,7 +216,8 @@ class TokenSplitter(BaseSplitter):
             punkt_dir = base / "tokenizers" / "punkt"
             if punkt_dir.exists():
                 models.update(f.stem for f in punkt_dir.glob("*.pickle"))
-        return sorted(models)
+        model_list = sorted(models)
+        return model_list
 
     def _parse_model(self) -> Tuple[str, str]:
         """Parse and validate the ``tokenizer/model`` string.

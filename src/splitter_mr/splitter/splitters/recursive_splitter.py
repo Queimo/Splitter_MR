@@ -45,9 +45,6 @@ class RecursiveCharacterSplitter(BaseSplitter):
         chunk_overlap: Union[int, float] = 0.1,
         separators: Union[str, List[str], Tuple[str]] = DEFAULT_RECURSIVE_SEPARATORS,
     ):
-        """
-        Initialize the RecursiveCharacterSplitter class.
-        """
         if not isinstance(chunk_size, int) or chunk_size < 1:
             raise SplitterConfigException(
                 "chunk_size must be a positive integer greater than or equal to 1"
