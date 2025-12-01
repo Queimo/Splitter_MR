@@ -38,12 +38,14 @@ from .constants import (
     BreakpointThresholdType,
 )
 from .exceptions import (
+    DoclingReaderException,
     HeaderLevelOutOfRangeError,
     HtmlConversionError,
     InvalidChunkException,
     InvalidHeaderNameError,
     InvalidHtmlTagError,
     NormalizationError,
+    ReaderConfigException,
     ReaderException,
     ReaderOutputException,
     SplitterConfigException,
@@ -65,6 +67,7 @@ from .models import (
 from .prompts import DEFAULT_IMAGE_CAPTION_PROMPT, DEFAULT_IMAGE_EXTRACTION_PROMPT
 from .warnings import (
     AutoTagFallbackWarning,
+    BaseReaderWarning,
     BaseSplitterWarning,
     BatchHtmlTableWarning,
     ChunkOverflowWarning,
@@ -88,8 +91,10 @@ __all__ = [
     "HFChatTextContent",
     "ReaderException",
     "ReaderOutputException",
+    "DoclingReaderException",
     "SplitterException",
     "SplitterConfigException",
+    "ReaderConfigException",
     "SplitterOutputException",
     "InvalidChunkException",
     "NormalizationError",
@@ -103,6 +108,7 @@ __all__ = [
     "BatchHtmlTableWarning",
     "SplitterOutputWarning",
     "BaseSplitterWarning",
+    "BaseReaderWarning",
     "ChunkOverflowWarning",
     "ChunkUnderflowWarning",
     "ALLOWED_HEADERS",

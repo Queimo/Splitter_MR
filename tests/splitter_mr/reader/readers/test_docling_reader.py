@@ -5,11 +5,12 @@ import uuid
 import warnings
 
 import pytest
+from docling.exceptions import BaseError as DoclingBaseError
 
 from splitter_mr.reader.readers.docling_reader import DoclingReader
 from splitter_mr.reader.readers.vanilla_reader import VanillaReader
 from splitter_mr.reader.utils import DoclingPipelineFactory
-from splitter_mr.schema import ReaderOutput
+from splitter_mr.schema import BaseReaderWarning, DoclingReaderException, ReaderOutput
 
 # ---- Helpers, mocks and fixtures ---- #
 
@@ -80,7 +81,7 @@ def patch_pipeline(monkeypatch):
     yield
 
 
-# Test cases
+# ---- Test cases ---- #
 
 
 def test_init_with_and_without_model():
@@ -96,16 +97,6 @@ def test_init_with_and_without_model():
     assert reader2.model_name == "abc"
 
 
-def test_unsupported_extension_warns(monkeypatch):
-    reader = DoclingReader()
-    # Not in supported ext
-    with warnings.catch_warnings(record=True) as w:
-        out = reader.read("foo.unsupported")
-        assert isinstance(out, ReaderOutput)
-        assert out.text == "vanilla-output"
-        assert any("Unsupported extension" in str(warn.message) for warn in w)
-
-
 def test_pdf_scan_pdf_pages(monkeypatch):
     model = DummyModel()
     reader = DoclingReader(model)
@@ -115,18 +106,6 @@ def test_pdf_scan_pdf_pages(monkeypatch):
     assert out.document_name == "x.pdf"
     assert out.conversion_method == "markdown"
     assert out.reader_method == "docling"
-    assert out.ocr_method == model.model_name
-
-
-def test_pdf_with_model_no_scan(monkeypatch):
-    model = DummyModel()
-    reader = DoclingReader(model)
-    with warnings.catch_warnings(record=True) as w:
-        out = reader.read("y.pdf", prompt="my prompt", show_base64_images=True)
-        # Should raise a warning about base64 images with model
-        assert any("base64 images are not rendered" in str(warn.message) for warn in w)
-    # Uses 'vlm' pipeline
-    assert out.text.startswith("vlm-pipeline-my prompt")
     assert out.ocr_method == model.model_name
 
 
@@ -169,9 +148,7 @@ def test_metadata_and_docid_passthrough(monkeypatch):
 def test__select_pipeline_pdf_scan_pdf_pages():
     model = DummyModel()
     reader = DoclingReader(model)
-    pipeline, args = reader._select_pipeline(
-        "doc.pdf", "pdf", scan_pdf_pages=True, prompt="x"
-    )
+    pipeline, args = reader._select_pipeline("pdf", scan_pdf_pages=True, prompt="x")
     assert pipeline == "page_image"
     assert args["model"] == model
     assert args["prompt"] == "x"
@@ -181,7 +158,7 @@ def test__select_pipeline_pdf_with_model_no_scan():
     model = DummyModel()
     reader = DoclingReader(model)
     pipeline, args = reader._select_pipeline(
-        "doc.pdf", "pdf", scan_pdf_pages=False, prompt="y", show_base64_images=True
+        "pdf", scan_pdf_pages=False, prompt="y", show_base64_images=True
     )
     assert pipeline == "vlm"
     assert args["model"] == model
@@ -190,16 +167,14 @@ def test__select_pipeline_pdf_with_model_no_scan():
 
 def test__select_pipeline_pdf_without_model():
     reader = DoclingReader()
-    pipeline, args = reader._select_pipeline("doc.pdf", "pdf")
+    pipeline, args = reader._select_pipeline("pdf")
     assert pipeline == "markdown"
     assert args["show_base64_images"] is False
 
 
 def test__select_pipeline_nonpdf():
     reader = DoclingReader()
-    pipeline, args = reader._select_pipeline(
-        "file.html", "html", show_base64_images=True
-    )
+    pipeline, args = reader._select_pipeline("html", show_base64_images=True)
     assert pipeline == "markdown"
     assert args["show_base64_images"] is True
     assert args["ext"] == "html"
@@ -249,6 +224,63 @@ def test_page_placeholder_none_when_absent(monkeypatch):
     reader = DoclingReader()
     out = reader.read("a.pdf", page_placeholder="<!-- page -->")
     assert out.page_placeholder is None
+
+
+# ---- Errors and warnings handling ---- #
+
+
+def test_unsupported_extension_warns(monkeypatch):
+    reader = DoclingReader()
+    # Not in supported ext
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        out = reader.read("foo.unsupported")
+        assert isinstance(out, ReaderOutput)
+        assert out.text == "vanilla-output"
+        # Message content
+        assert any("Unsupported extension" in str(warn.message) for warn in w)
+        # Warning type
+        assert any(issubclass(warn.category, BaseReaderWarning) for warn in w)
+
+
+def test_pdf_with_model_no_scan(monkeypatch):
+    model = DummyModel()
+    reader = DoclingReader(model)
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        out = reader.read("y.pdf", prompt="my prompt", show_base64_images=True)
+        # Should raise a warning about base64 images with model
+        assert any("base64 images are not rendered" in str(warn.message) for warn in w)
+        # Warning type
+        assert any(issubclass(warn.category, BaseReaderWarning) for warn in w)
+    # Uses 'vlm' pipeline
+    assert out.text.startswith("vlm-pipeline-my prompt")
+    assert out.ocr_method == model.model_name
+
+
+def test_docling_pipeline_error_is_wrapped(monkeypatch):
+    """
+    If the underlying Docling pipeline raises a docling BaseError,
+    DoclingReader should wrap it in DoclingReaderException and preserve
+    the original as __cause__.
+    """
+
+    class DummyDoclingError(DoclingBaseError):
+        pass
+
+    def failing_run(name, path, **kwargs):
+        raise DummyDoclingError("boom")
+
+    # Override the autouse patch with a failing implementation
+    monkeypatch.setattr(DoclingPipelineFactory, "run", failing_run)
+
+    reader = DoclingReader()
+    with pytest.raises(DoclingReaderException) as excinfo:
+        reader.read("doc.pdf")
+
+    msg = str(excinfo.value)
+    assert "Docling pipeline" in msg or "doc.pdf" in msg
+    assert isinstance(excinfo.value.__cause__, DummyDoclingError)
 
 
 def test_docling_factory_raises_nice_error_when_missing_extra(monkeypatch):
