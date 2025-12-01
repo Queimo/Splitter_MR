@@ -15,6 +15,7 @@ from ...schema import (
     SUPPORTED_DOCLING_FILE_EXTENSIONS,
     BaseReaderWarning,
     DoclingReaderException,
+    ReaderConfigException,
     ReaderOutput,
 )
 from ..base_reader import BaseReader
@@ -78,7 +79,6 @@ class DoclingReader(BaseReader):
             DoclingReaderException: If an specific docling exception is raised during
                 pipeline execution (e.g., ConversionError, OperationNotAllowed, etc.)
         """
-        # Initialization
         ext: str = os.path.splitext(str(file_path))[1].lower().lstrip(".")
         if ext not in SUPPORTED_DOCLING_FILE_EXTENSIONS:
             msg = f"Unsupported extension '{ext}'. Using VanillaReader."
@@ -86,15 +86,21 @@ class DoclingReader(BaseReader):
             return VanillaReader().read(file_path=file_path, **kwargs)
 
         # Pipeline selection and execution
-        pipeline_name, pipeline_args = self._select_pipeline(
-            str(file_path), ext, **kwargs
-        )
+        pipeline_name, pipeline_args = self._select_pipeline(ext, **kwargs)
 
         try:
-            md = DoclingPipelineFactory.run(pipeline_name, file_path, **pipeline_args)
+            md = DoclingPipelineFactory.run(
+                pipeline_name, str(file_path), **pipeline_args
+            )
+        except ReaderConfigException:
+            raise
         except DoclingBaseError as exc:
             raise DoclingReaderException(
                 f"Docling pipeline '{pipeline_name}' failed for '{file_path}': {exc}"
+            ) from exc
+        except Exception as exc:
+            raise DoclingReaderException(
+                f"Unexpected error in Docling pipeline '{pipeline_name}' for '{file_path}': {exc}"
             ) from exc
 
         page_placeholder: str = pipeline_args.get(
@@ -118,12 +124,11 @@ class DoclingReader(BaseReader):
             metadata=kwargs.get("metadata", {}),
         )
 
-    def _select_pipeline(self, file_path: str, ext: str, **kwargs) -> tuple[str, dict]:
+    def _select_pipeline(self, ext: str, **kwargs) -> tuple[str, dict]:
         """
         Decides which pipeline to use and prepares arguments for it.
 
         Args:
-            file_path (str): Path to the input document.
             ext (str): File extension.
             **kwargs: Extraction and pipeline control options, including:
                 - prompt (str)

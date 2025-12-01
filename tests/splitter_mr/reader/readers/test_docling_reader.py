@@ -148,9 +148,7 @@ def test_metadata_and_docid_passthrough(monkeypatch):
 def test__select_pipeline_pdf_scan_pdf_pages():
     model = DummyModel()
     reader = DoclingReader(model)
-    pipeline, args = reader._select_pipeline(
-        "doc.pdf", "pdf", scan_pdf_pages=True, prompt="x"
-    )
+    pipeline, args = reader._select_pipeline("pdf", scan_pdf_pages=True, prompt="x")
     assert pipeline == "page_image"
     assert args["model"] == model
     assert args["prompt"] == "x"
@@ -160,7 +158,7 @@ def test__select_pipeline_pdf_with_model_no_scan():
     model = DummyModel()
     reader = DoclingReader(model)
     pipeline, args = reader._select_pipeline(
-        "doc.pdf", "pdf", scan_pdf_pages=False, prompt="y", show_base64_images=True
+        "pdf", scan_pdf_pages=False, prompt="y", show_base64_images=True
     )
     assert pipeline == "vlm"
     assert args["model"] == model
@@ -169,16 +167,14 @@ def test__select_pipeline_pdf_with_model_no_scan():
 
 def test__select_pipeline_pdf_without_model():
     reader = DoclingReader()
-    pipeline, args = reader._select_pipeline("doc.pdf", "pdf")
+    pipeline, args = reader._select_pipeline("pdf")
     assert pipeline == "markdown"
     assert args["show_base64_images"] is False
 
 
 def test__select_pipeline_nonpdf():
     reader = DoclingReader()
-    pipeline, args = reader._select_pipeline(
-        "file.html", "html", show_base64_images=True
-    )
+    pipeline, args = reader._select_pipeline("html", show_base64_images=True)
     assert pipeline == "markdown"
     assert args["show_base64_images"] is True
     assert args["ext"] == "html"

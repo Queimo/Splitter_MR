@@ -22,6 +22,15 @@ class HtmlConversionError(ReaderException):
     """Raised when HTML→Markdown conversion fails."""
 
 
+# ---- General Exceptions ---- #
+
+
+class ReaderConfigException(ReaderException, ValueError):
+    """
+    Raised when invalid parameters are passed to the Reader configuration.
+    """
+
+
 # ---- Docling Exceptions ---- #
 
 
