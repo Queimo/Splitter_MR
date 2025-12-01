@@ -22,6 +22,16 @@ class HtmlConversionError(ReaderException):
     """Raised when HTML→Markdown conversion fails."""
 
 
+# ---- Docling Exceptions ---- #
+
+
+class DoclingReaderException(ReaderException, RuntimeError):
+    """
+    Raised when IBM Docling–based document conversion fails in DoclingReader.
+    Wraps exceptions coming from docling.exceptions.BaseError.
+    """
+
+
 # ---------------------------------- #
 # ------------ Splitter ------------ #
 # ---------------------------------- #

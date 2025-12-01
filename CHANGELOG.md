@@ -1,4 +1,4 @@
-# v1.0.x
+# Version 1 (v1.x.x)
 
 > **Version 1.0.0: First stable release with full Reader, Splitter, Embedding and Vision model support.**
 
