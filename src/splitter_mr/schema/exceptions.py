@@ -31,6 +31,26 @@ class ReaderConfigException(ReaderException, ValueError):
     """
 
 
+# ---- VanillaReader Exceptions ---- #
+
+
+class VanillaReaderException(ReaderException, RuntimeError):
+    """
+    Raised when VanillaReader–based document conversion fails.
+    Wraps exceptions coming from vanilla_reader.exceptions.VanillaReaderError.
+    """
+
+
+# ---- MarkItDown Exceptions ---- #
+
+
+class MarkItDownReaderException(ReaderException, RuntimeError):
+    """
+    Raised when MarkItDown–based document conversion fails in MarkItDownReader.
+    Wraps exceptions coming from markitdown.exceptions.MarkItDownError.
+    """
+
+
 # ---- Docling Exceptions ---- #
 
 
