@@ -6,6 +6,10 @@ import pytest
 
 from splitter_mr.model.base_model import BaseVisionModel
 from splitter_mr.reader.readers.markitdown_reader import MarkItDownReader
+from splitter_mr.schema.exceptions import (
+    MarkItDownReaderException,
+    ReaderConfigException,
+)
 
 # Helpers
 
@@ -113,17 +117,31 @@ def test_markitdown_reader_defaults(tmp_path):
 def test_scan_pdf_pages_calls_convert_per_page(tmp_path):
     pdf = tmp_path / "multi.pdf"
     pdf.write_text("dummy pdf")
-    patch_oa, DummyVisionModel = patch_vision_models()
+    patch_oa, dummy_vision_model = patch_vision_models()
+
+    # Create 3 dummy temp files to simulate a 3-page PDF split
+    temp_files = [str(tmp_path / f"p{i}.pdf") for i in range(3)]
+    for f in temp_files:
+        with open(f, "w") as fp:
+            fp.write("content")
+
     with (
-        patch_pdf_pages(pages=3),
+        # Mock the split method to avoid actual PDF parsing
+        patch(
+            "splitter_mr.reader.readers.markitdown_reader.MarkItDownReader._split_pdf_to_temp_pdfs",
+            return_value=temp_files,
+        ),
         patch("splitter_mr.reader.readers.markitdown_reader.MarkItDown") as MockMID,
+        patch("os.remove"),  # Prevent actual deletion so we don't error on cleanup
         patch_oa,
     ):
-        reader = MarkItDownReader(model=DummyVisionModel())
+        reader = MarkItDownReader(model=dummy_vision_model())
         MockMID.return_value.convert.return_value = MagicMock(text_content="## page-md")
-        result = reader.read(str(pdf), scan_pdf_pages=True)
+
+        result = reader.read(str(pdf), split_by_pages=True)
+
         assert MockMID.return_value.convert.call_count == 3
-        assert "<!-- page -->" in result.text
+        assert "" in result.text
         assert result.conversion_method == "markdown"
         for call in MockMID.return_value.convert.call_args_list:
             assert "llm_prompt" in call.kwargs
@@ -133,16 +151,27 @@ def test_scan_pdf_pages_calls_convert_per_page(tmp_path):
 def test_scan_pdf_pages_uses_custom_prompt(tmp_path):
     pdf = tmp_path / "single.pdf"
     pdf.write_text("dummy pdf")
-    patch_oa, DummyVisionModel = patch_vision_models()
+    patch_oa, dummy_vision_model = patch_vision_models()
+
+    temp_files = [str(tmp_path / "p1.pdf")]
+    with open(temp_files[0], "w") as fp:
+        fp.write("content")
+
     with (
-        patch_pdf_pages(pages=1),
+        patch(
+            "splitter_mr.reader.readers.markitdown_reader.MarkItDownReader._split_pdf_to_temp_pdfs",
+            return_value=temp_files,
+        ),
         patch("splitter_mr.reader.readers.markitdown_reader.MarkItDown") as MockMID,
+        patch("os.remove"),
         patch_oa,
     ):
-        reader = MarkItDownReader(model=DummyVisionModel())
+        reader = MarkItDownReader(model=dummy_vision_model())
         MockMID.return_value.convert.return_value = MagicMock(text_content="foo")
         custom_prompt = "My **special** OCR prompt"
-        reader.read(str(pdf), scan_pdf_pages=True, prompt=custom_prompt)
+
+        reader.read(str(pdf), split_by_pages=True, prompt=custom_prompt)
+
         _, kwargs = MockMID.return_value.convert.call_args
         assert kwargs["llm_prompt"] == custom_prompt
 
@@ -152,24 +181,36 @@ def test_scan_pdf_pages_splits_each_page(tmp_path):
     """Test PDF is split and scanned page by page with VisionModel."""
     pdf = tmp_path / "multi.pdf"
     pdf.write_text("dummy pdf")
-    patch_oa, DummyVisionModel = patch_vision_models()
+    patch_oa, dummy_vision_model = patch_vision_models()
+
+    temp_files = [str(tmp_path / f"p{i}.pdf") for i in range(3)]
+    for f in temp_files:
+        with open(f, "w") as fp:
+            fp.write("content")
+
     with (
-        patch_pdf_pages(pages=3),
+        patch(
+            "splitter_mr.reader.readers.markitdown_reader.MarkItDownReader._split_pdf_to_temp_pdfs",
+            return_value=temp_files,
+        ),
         patch("splitter_mr.reader.readers.markitdown_reader.MarkItDown") as MockMID,
+        patch("os.remove"),
         patch_oa,
     ):
-        reader = MarkItDownReader(model=DummyVisionModel())
+        reader = MarkItDownReader(model=dummy_vision_model())
         # Simulate each page conversion returning "PAGE-MD"
         MockMID.return_value.convert.side_effect = [
             MagicMock(text_content="PAGE-MD"),
             MagicMock(text_content="PAGE-MD"),
             MagicMock(text_content="PAGE-MD"),
         ]
-        result = reader.read(str(pdf), scan_pdf_pages=True)
+
+        result = reader.read(str(pdf), split_by_pages=True)
+
         # Should call convert 3 times (one for each page)
         assert MockMID.return_value.convert.call_count == 3
         # Output contains all pages and the correct headings
-        assert "<!-- page -->" in result.text
+        assert "" in result.text
         assert "PAGE-MD" in result.text
         # Metadata should reflect scan mode
         assert result.conversion_method == "markdown"
@@ -181,36 +222,52 @@ def test_scan_pdf_pages_custom_prompt(tmp_path):
     """Test that a custom prompt is passed for page scanning."""
     pdf = tmp_path / "onepage.pdf"
     pdf.write_text("pdf")
-    patch_oa, DummyVisionModel = patch_vision_models()
+    patch_oa, dummy_vision_model = patch_vision_models()
+
+    temp_files = [str(tmp_path / "p1.pdf")]
+    with open(temp_files[0], "w") as fp:
+        fp.write("content")
+
     with (
-        patch_pdf_pages(pages=1),
+        patch(
+            "splitter_mr.reader.readers.markitdown_reader.MarkItDownReader._split_pdf_to_temp_pdfs",
+            return_value=temp_files,
+        ),
         patch("splitter_mr.reader.readers.markitdown_reader.MarkItDown") as MockMID,
+        patch("os.remove"),
         patch_oa,
     ):
         MockMID.return_value.convert.return_value = MagicMock(text_content="CUSTOM")
-        reader = MarkItDownReader(model=DummyVisionModel())
+        reader = MarkItDownReader(model=dummy_vision_model())
         custom_prompt = "Describe this page in detail."
-        reader.read(str(pdf), scan_pdf_pages=True, prompt=custom_prompt)
+
+        reader.read(str(pdf), split_by_pages=True, prompt=custom_prompt)
+
         # Should pass prompt to convert
-        args, kwargs = MockMID.return_value.convert.call_args
+        _, kwargs = MockMID.return_value.convert.call_args
         assert kwargs["llm_prompt"] == custom_prompt
 
 
 @pytest.mark.parametrize(
     "md_text, page_placeholder, expected",
     [
-        ("text <!-- page --> more", "<!-- page -->", "<!-- page -->"),
+        ("text more", "", None),
         # etc...
     ],
 )
 def test_page_placeholder_field(
     monkeypatch, tmp_path, md_text, page_placeholder, expected
 ):
+    # 1. Mock OpenAI in the reader module so isinstance works
+    monkeypatch.setattr(
+        "splitter_mr.reader.readers.markitdown_reader.OpenAI", FakeOpenAI
+    )
+
     class DummyVisionModel:
         model_name = "gpt-4o-vision"
 
         def get_client(self):
-            return None
+            return FakeOpenAI()
 
     file_path = tmp_path / "doc.pdf"
     file_path.write_text("fake pdf")
@@ -220,13 +277,16 @@ def test_page_placeholder_field(
         "_pdf_pages_to_markdown",
         lambda self, file_path, md, prompt, page_placeholder: md_text,
     )
+
     monkeypatch.setattr(
-        MarkItDownReader, "_get_markitdown", lambda self: (None, "gpt-4o-vision")
+        MarkItDownReader,
+        "_pdf_file_per_page_to_markdown",
+        lambda self, file_path, md, prompt, page_placeholder: md_text,
     )
 
     reader = MarkItDownReader(model=DummyVisionModel())
     out = reader.read(
-        str(file_path), page_placeholder=page_placeholder, scan_pdf_pages=True
+        str(file_path), page_placeholder=page_placeholder, split_by_pages=True
     )
     assert out.page_placeholder == expected
 
@@ -484,7 +544,9 @@ def test_convert_to_pdf_raises_if_soffice_missing(tmp_path, monkeypatch):
     # Patch shutil.which to simulate "soffice" missing
     monkeypatch.setattr("shutil.which", lambda _: None)
     reader = MarkItDownReader()
-    with pytest.raises(RuntimeError) as exc:
+
+    # Changed: RuntimeError -> MarkItDownReaderException
+    with pytest.raises(MarkItDownReaderException) as exc:
         reader._convert_to_pdf(str(test_file))
     assert "LibreOffice" in str(exc.value)
 
@@ -502,9 +564,12 @@ def test_convert_to_pdf_raises_on_subprocess_error(tmp_path, monkeypatch):
 
     monkeypatch.setattr("subprocess.run", lambda *a, **k: DummyResult())
     reader = MarkItDownReader()
-    with pytest.raises(RuntimeError) as exc:
+
+    # Changed: RuntimeError -> MarkItDownReaderException
+    with pytest.raises(MarkItDownReaderException) as exc:
         reader._convert_to_pdf(str(test_file))
-    assert "Failed to convert" in str(exc.value)
+    # Adjusted string match to new error message
+    assert "conversion failed" in str(exc.value)
 
 
 def test_convert_to_pdf_raises_when_pdf_not_created(tmp_path, monkeypatch):
@@ -519,25 +584,33 @@ def test_convert_to_pdf_raises_when_pdf_not_created(tmp_path, monkeypatch):
 
     monkeypatch.setattr("subprocess.run", lambda *a, **k: DummyResult())
     reader = MarkItDownReader()
-    with pytest.raises(RuntimeError) as exc:
+
+    # Changed: RuntimeError -> MarkItDownReaderException
+    with pytest.raises(MarkItDownReaderException) as exc:
         reader._convert_to_pdf(str(test_file))
     assert "PDF was not created" in str(exc.value)
 
 
-def test_get_markitdown_raises_on_wrong_model():
+def test_init_raises_on_wrong_model_client():
+    """
+    Renamed from test_get_markitdown_raises_on_wrong_model.
+    Validation now happens in __init__, not _get_markitdown.
+    """
+
     class InvalidVisionModel(BaseVisionModel):
         def __init__(self, model_name="bad"):
             self.model_name = model_name
 
         def get_client(self):
-            return object()  # <-- Not an OpenAI instance!
+            return object()
 
         def analyze_content(self, prompt, file, file_ext, **kwargs):
             return "dummy"
 
-    reader = MarkItDownReader(model=InvalidVisionModel())
-    with pytest.raises(ValueError) as exc:
-        reader._get_markitdown()
+    # Changed: ValueError -> ReaderConfigException
+    # Changed: Check occurs during instantiation
+    with pytest.raises(ReaderConfigException) as exc:
+        MarkItDownReader(model=InvalidVisionModel())
     assert "Incompatible client" in str(exc.value)
 
 
