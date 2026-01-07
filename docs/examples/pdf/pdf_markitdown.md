@@ -184,17 +184,29 @@ To retrieve the text content, you can simply access to the `text` attribute:
 print(output.text)
 ```
 
-    <!-- page -->
+    A sample PDF
     
-    # Description:
-    # A sample PDF
+    Converting PDF files to other formats, such as Markdown, is a surprisingly
+    complex task due to the nature of the PDF format itself. PDF (Portable
+    Document Format) was designed primarily for preserving the visual layout of
+    documents, making them look the same across different devices and
+    platforms. However, this design goal introduces several challenges when trying to
+    extract and convert the underlying content into a more flexible, structured format
+    like Markdown.
     
-    Converting PDF files to other formats, such as Markdown, is a surprisingly complex task due to the nature of the PDF format itself. PDF (Portable Document Format) was designed primarily for preserving the visual layout of documents, making them look the same across different devices and platforms. However, this design goal introduces several challenges when trying to extract and convert the underlying content into a more flexible, structured format l
+    Ilustración 1. Sp
     ...
-    simple on the surface, converting PDFs to formats like Markdown involves a series of technical and interpretive challenges. Effective conversion tools must blend text extraction, document analysis, and sometimes machine learning techniques (such as OCR or structure recognition) to produce usable, readable, and faithful Markdown output. As a result, perfect conversion is rarely possible, and manual review and cleanup are often required.
+    ct Lead  carol@example.com
     
-    ![Hummingbird](https://example.com/hummingbird-image)
-    ```
+    Conclusion
+    
+    While it may seem simple on the surface, converting PDFs to formats like
+    Markdown involves a series of technical and interpretive challenges. Effective
+    conversion tools must blend text extraction, document analysis, and sometimes
+    machine learning techniques (such as OCR or structure recognition) to produce
+    usable, readable, and faithful Markdown output. As a result, perfect conversion
+    is rarely possible, and manual review and cleanup are often required.
+    
     
 
 
@@ -229,22 +241,29 @@ output = reader.read(
 print(output.text)
 ```
 
-    ## PAGE
+    A sample PDF
     
-    # Description:
-    The document discusses the challenges of converting PDF files to more flexible formats like Markdown due to the inherent characteristics of PDFs. It highlights two main issues: the lack of structural information, which complicates the extraction of organized content, and the variability in PDF content types, leading to inconsistent results during conversion.
+    Converting PDF files to other formats, such as Markdown, is a surprisingly
+    complex task due to the nature of the PDF format itself. PDF (Portable
+    Document Format) was designed primarily for preserving the visual layout of
+    documents, making them look the same across different devices and
+    platforms. However, this design goal introduces several challenges when trying to
+    extract and convert the underlying content into a more flexible, structured format
+    like Markdown.
     
-    ## PAGE
-    
-    # Description:
-    1. **Preservation of Formatting**: Discusses the limitations of Markdown in replicating co
+    Ilustración 1. Sp
     ...
-    d special characters in PDFs, focusing on the risks of data loss and corruption during extraction.
+    ct Lead  carol@example.com
     
-    ## PAGE
+    Conclusion
     
-    # Description:
-    The page summarizes the challenges of converting PDFs to Markdown formats, emphasizing the need for advanced tools that integrate text extraction, document analysis, and machine learning. It concludes that perfect conversion is difficult and often requires manual review and adjustments. Additionally, a table of team members with their roles and contact emails is included.
+    While it may seem simple on the surface, converting PDFs to formats like
+    Markdown involves a series of technical and interpretive challenges. Effective
+    conversion tools must blend text extraction, document analysis, and sometimes
+    machine learning techniques (such as OCR or structure recognition) to produce
+    usable, readable, and faithful Markdown output. As a result, perfect conversion
+    is rarely possible, and manual review and cleanup are often required.
+    
     
 
 
