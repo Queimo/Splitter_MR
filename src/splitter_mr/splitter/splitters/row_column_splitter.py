@@ -59,7 +59,7 @@ class RowColumnSplitter(BaseSplitter):
 
             * When splitting by rows or columns, if an ``int``, it is the
               number of overlapping rows/columns. If a ``float`` in
-              ``[0, 1)``, it is interpreted as a fraction of the rows/columns
+              ``\\[0, 1)``, it is interpreted as a fraction of the rows/columns
               per chunk.
             * When splitting by ``chunk_size``, it represents the number or
               fraction of overlapping **rows** (not characters).
@@ -71,7 +71,7 @@ class RowColumnSplitter(BaseSplitter):
             If configuration is invalid, e.g.:
 
             * ``num_rows`` and ``num_cols`` are both non-zero.
-            * ``chunk_overlap`` as ``float`` is not in ``[0, 1)``.
+            * ``chunk_overlap`` as ``float`` is not in ``\\[0, 1)``.
             * ``chunk_overlap`` as ``int`` is negative.
     """
 
@@ -101,7 +101,7 @@ class RowColumnSplitter(BaseSplitter):
                 * ``num_rows`` and ``num_cols`` are both non-zero.
                 * ``num_rows`` or ``num_cols`` is negative.
                 * ``chunk_overlap`` is negative.
-                * ``chunk_overlap`` is a ``float`` outside ``[0, 1)``.
+                * ``chunk_overlap`` is a ``float`` outside ``\\[0, 1)``.
         """
         if self.num_rows and self.num_cols:
             raise SplitterConfigException(
@@ -127,13 +127,14 @@ class RowColumnSplitter(BaseSplitter):
     # ---- Main logic ---- #
 
     def split(self, reader_output: ReaderOutput) -> SplitterOutput:
-        """Split the input tabular data into chunks.
+        """
+        Split the input tabular data into chunks.
 
         The splitting strategy is determined by the configuration:
 
-        * If ``num_rows > 0``: split by rows.
-        * Else if ``num_cols > 0``: split by columns.
-        * Else: split by character-based chunk size in markdown format,
+        - If ``num_rows > 0``: split by rows.
+        - Else if ``num_cols > 0``: split by columns.
+        - Else: split by character-based chunk size in markdown format,
           preserving a header row and never cutting data rows.
 
         Args:
@@ -151,13 +152,12 @@ class RowColumnSplitter(BaseSplitter):
             SplitterOutput:
                 Populated splitter output with:
 
-                * ``chunks``: list[str] of chunked tables.
+                * ``chunks``: list of chunked tables.
                 * ``chunk_id``: generated chunk identifiers.
                 * document metadata carried over from ``reader_output``.
                 * ``split_method="row_column_splitter"``.
                 * ``split_params`` describing the configuration.
-                * ``metadata["chunks"]`` containing per-chunk metadata
-                  (e.g., row/column indices and type).
+                * ``metadata`` containing extra information.
 
         Raises:
             ReaderOutputException:
@@ -237,7 +237,10 @@ class RowColumnSplitter(BaseSplitter):
             ```python
             [['id', 1, 2, 3, 4], ['name', 'A', 'B', 'C', 'D']]
             ```
+            ```python
             print(out.metadata["chunks"][0])
+            ```
+
             ```python
             {'cols': ['id', 'name'], 'type': 'column'}
             ```
