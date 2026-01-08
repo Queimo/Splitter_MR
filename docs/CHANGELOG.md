@@ -8,15 +8,15 @@
 
 ### Features
 
-- Add **error handling** in SplitterMR components.
-- Add **warnings** in SplitterMR components.
-- Refactor code by constants. Transform them into `Literal` to make the code more robust.
+- Add **error handling** and **warnings** in ALL SplitterMR components.
+- Refactor code by constants. Transform them into `Literal` to make the code more robust, flexible and for type hinting.
 - Refactor some function signatures to match expected behavior.
 
 ### Documentation
 
 - Fix some docstrings for better readability.
 - Update docstring documentation.
+- Update examples.
 
 ## v1.0.1
 
