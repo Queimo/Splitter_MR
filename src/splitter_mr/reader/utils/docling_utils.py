@@ -14,7 +14,14 @@ from docling_core.types.doc import ImageRefMode
 from PIL.Image import Image
 
 from ...model import BaseVisionModel
-from ...schema import DEFAULT_IMAGE_CAPTION_PROMPT, DEFAULT_IMAGE_EXTRACTION_PROMPT
+from ...schema import (
+    DEFAULT_IMAGE_CAPTION_PROMPT,
+    DEFAULT_IMAGE_EXTRACTION_PROMPT,
+    DEFAULT_IMAGE_PLACEHOLDER,
+    DEFAULT_PAGE_PLACEHOLDER,
+    BaseReaderWarning,
+    ReaderConfigException,
+)
 
 # from urllib.parse import urlencode, urljoin
 
@@ -30,7 +37,7 @@ def page_image_pipeline(
     prompt: str = DEFAULT_IMAGE_EXTRACTION_PROMPT,
     image_resolution: float = 1.0,
     show_base64_images: bool = False,
-    page_placeholder: str = "<!-- page -->",
+    page_placeholder: str = DEFAULT_PAGE_PLACEHOLDER,
 ) -> str:
     """
     Processes a PDF by extracting each page as an image, then running a vision-language model on each page image.
@@ -48,7 +55,7 @@ def page_image_pipeline(
         output_md (str): Markdown-formatted string with each page's extracted content.
 
     Raises:
-        ValueError: If a model is not provided and show_base64_images is False.
+        ReaderConfigException: If a model is not provided and show_base64_images is False.
     """
 
     def image_to_base64(img: Image) -> str:
@@ -68,7 +75,7 @@ def page_image_pipeline(
     file_path = str(file_path)
 
     if model is None and show_base64_images is False:
-        raise ValueError(
+        raise ReaderConfigException(
             "Either a model must be provided or show_base64_images must be True."
         )
 
@@ -104,9 +111,9 @@ def vlm_pipeline(
     file_path: str | Path,
     model: BaseVisionModel = None,
     prompt: str = DEFAULT_IMAGE_CAPTION_PROMPT,
-    page_placeholder: str = "<!-- page -->",
+    page_placeholder: str = DEFAULT_PAGE_PLACEHOLDER,
     image_resolution: float = 1.0,
-    image_placeholder: str = "<!-- image -->",
+    image_placeholder: str = DEFAULT_IMAGE_PLACEHOLDER,
 ) -> str:
     """
     Processes a PDF using a remote Vision-Language Model (VLM) pipeline, returning the result as Markdown.
@@ -117,15 +124,18 @@ def vlm_pipeline(
         prompt (str): Prompt for the VLM extraction.
         page_placeholder (str): Placeholder to indicate the start of a new page (e.g., '<!-- page -->').
         image_resolution (float, optional): Scaling factor for output image resolution. Defaults to 1.0 (72 dpi).
-        image_placeholder (str): Placeholder string for images (when not embedding), e.g., '<!-- image -->'.
+        image_placeholder (str): The placeholder string for images (when not embedding), e.g., '<!-- image -->'.
 
     Returns:
         md (str): Markdown-formatted extracted document.
+
+    Raises:
+        ReaderConfigException: If no model is provided.
     """
     file_path = str(file_path)
 
     if model is None:
-        raise ValueError("A model must be provided for vlm_pipeline.")
+        raise ReaderConfigException("A model must be provided for 'vlm' pipeline'")
 
     def describe_and_replace_base64_images(
         md: str, model: BaseVisionModel, prompt: str, image_placeholder: str
@@ -155,12 +165,14 @@ def vlm_pipeline(
                 desc = model.analyze_content(prompt=prompt, file=img_b64)
                 if not desc or not desc.strip():
                     warnings.warn(
-                        f"No description generated for image with alt text '{alt_text}'"
+                        f"No description generated for image with alt text '{alt_text}'",
+                        BaseReaderWarning,
                     )
                     desc = "Image description not available."
             except Exception as e:
                 warnings.warn(
-                    f"Failed to process image with alt text '{alt_text}': {e}"
+                    f"Failed to process image with alt text '{alt_text}': {e}",
+                    BaseReaderWarning,
                 )
                 desc = f"Image extraction failed: {e}"
             return f"{image_placeholder}\n{desc.strip()}"
@@ -195,8 +207,8 @@ def vlm_pipeline(
 def markdown_pipeline(
     file_path: str | Path,
     show_base64_images: bool = True,
-    page_placeholder: str = "<!-- page -->",
-    image_placeholder: str = "<!-- image -->",
+    page_placeholder: str = DEFAULT_PAGE_PLACEHOLDER,
+    image_placeholder: str = DEFAULT_IMAGE_PLACEHOLDER,
     image_resolution: float = 1.0,
     ext: str = "pdf",
 ) -> str:
@@ -279,10 +291,10 @@ class DoclingPipelineFactory:
             Callable[..., str]: The registered pipeline function.
 
         Raises:
-            ValueError: If the pipeline name is not registered.
+            ReaderConfigException: If the pipeline name is not registered.
         """
         if name not in cls._registry:
-            raise ValueError(f"Pipeline '{name}' not registered")
+            raise ReaderConfigException(f"Pipeline '{name}' not registered")
         return cls._registry[name]
 
     @classmethod
@@ -299,7 +311,7 @@ class DoclingPipelineFactory:
             str: Markdown-formatted extracted document or page text.
 
         Raises:
-            ValueError: If the pipeline is not registered.
+            ReaderConfigException: If the pipeline is not registered.
         """
         func = cls.get(pipeline_name)
         return func(file_path=file_path, **kwargs)

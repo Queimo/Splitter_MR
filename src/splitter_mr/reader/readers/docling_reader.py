@@ -1,15 +1,21 @@
 import os
-import re
 import uuid
 import warnings
 from pathlib import Path
 from typing import Any, Optional
 
+from docling.exceptions import BaseError as DoclingBaseError
+
 from ...model import BaseVisionModel
 from ...schema import (
     DEFAULT_IMAGE_CAPTION_PROMPT,
     DEFAULT_IMAGE_EXTRACTION_PROMPT,
+    DEFAULT_IMAGE_PLACEHOLDER,
+    DEFAULT_PAGE_PLACEHOLDER,
     SUPPORTED_DOCLING_FILE_EXTENSIONS,
+    BaseReaderWarning,
+    DoclingReaderException,
+    ReaderConfigException,
     ReaderOutput,
 )
 from ..base_reader import BaseReader
@@ -23,26 +29,16 @@ class DoclingReader(BaseReader):
     with optional image captioning or VLM-based PDF processing. Supports automatic pipeline selection,
     seamless integration with custom vision-language models, and configurable output for both PDF
     and non-PDF files.
+
+    Args:
+        model (Optional[BaseVisionModel], optional): An optional vision-language
+            model instance used for PDF pipelines that require image captioning
+            or per-page analysis. If provided, the model’s client and metadata
+            (e.g., Azure deployment settings) are stored for use in downstream
+            processing. Defaults to None.
     """
 
-    SUPPORTED_EXTENSIONS = SUPPORTED_DOCLING_FILE_EXTENSIONS
-
-    _IMAGE_PATTERN = re.compile(
-        r"!\[(?P<alt>[^\]]*?)\]"
-        r"\((?P<uri>data:image/[a-zA-Z0-9.+-]+;base64,(?P<b64>[A-Za-z0-9+/=]+))\)"
-    )
-
     def __init__(self, model: Optional[BaseVisionModel] = None) -> None:
-        """
-        Initialize a DoclingReader instance.
-
-        Args:
-            model (Optional[BaseVisionModel], optional): An optional vision-language
-                model instance used for PDF pipelines that require image captioning
-                or per-page analysis. If provided, the model’s client and metadata
-                (e.g., Azure deployment settings) are stored for use in downstream
-                processing. Defaults to None.
-        """
         self.model = model
         self.client = None
         self.model_name: Optional[str] = None
@@ -75,23 +71,41 @@ class DoclingReader(BaseReader):
         Returns:
             ReaderOutput: Extracted document in Markdown format and associated metadata.
 
-        Raises:
-            Warning: If a file extension is unsupported, falls back to VanillaReader and emits a warning.
-            ValueError: If PDF pipeline requirements are not satisfied (e.g., neither model nor
-                show_base64_images provided).
-        """
+        Warns:
+            BaseReaderWarning: If the file extension is not supported by Docling,
+                this method falls back to ``VanillaReader``.
 
-        ext: str = os.path.splitext(file_path)[1].lower().lstrip(".")
-        if ext not in self.SUPPORTED_EXTENSIONS:
+        Raises:
+            DoclingReaderException: If an specific docling exception is raised during
+                pipeline execution (e.g., ConversionError, OperationNotAllowed, etc.)
+        """
+        ext: str = os.path.splitext(str(file_path))[1].lower().lstrip(".")
+        if ext not in SUPPORTED_DOCLING_FILE_EXTENSIONS:
             msg = f"Unsupported extension '{ext}'. Using VanillaReader."
-            warnings.warn(msg)
+            warnings.warn(msg, BaseReaderWarning)
             return VanillaReader().read(file_path=file_path, **kwargs)
 
         # Pipeline selection and execution
-        pipeline_name, pipeline_args = self._select_pipeline(file_path, ext, **kwargs)
-        md = DoclingPipelineFactory.run(pipeline_name, file_path, **pipeline_args)
+        pipeline_name, pipeline_args = self._select_pipeline(ext, **kwargs)
 
-        page_placeholder: str = pipeline_args.get("page_placeholder", "<!-- page -->")
+        try:
+            md = DoclingPipelineFactory.run(
+                pipeline_name, str(file_path), **pipeline_args
+            )
+        except ReaderConfigException:
+            raise
+        except DoclingBaseError as exc:
+            raise DoclingReaderException(
+                f"Docling pipeline '{pipeline_name}' failed for '{file_path}': {exc}"
+            ) from exc
+        except Exception as exc:
+            raise DoclingReaderException(
+                f"Unexpected error in Docling pipeline '{pipeline_name}' for '{file_path}': {exc}"
+            ) from exc
+
+        page_placeholder: str = pipeline_args.get(
+            "page_placeholder", DEFAULT_PAGE_PLACEHOLDER
+        )
         page_placeholder_value = (
             page_placeholder if page_placeholder and page_placeholder in md else None
         )
@@ -100,8 +114,8 @@ class DoclingReader(BaseReader):
 
         return ReaderOutput(
             text=text,
-            document_name=os.path.basename(file_path),
-            document_path=file_path,
+            document_name=os.path.basename(str(file_path)),
+            document_path=str(file_path),
             document_id=kwargs.get("document_id", str(uuid.uuid4())),
             conversion_method="markdown",
             reader_method="docling",
@@ -110,12 +124,11 @@ class DoclingReader(BaseReader):
             metadata=kwargs.get("metadata", {}),
         )
 
-    def _select_pipeline(self, file_path: str, ext: str, **kwargs) -> tuple[str, dict]:
+    def _select_pipeline(self, ext: str, **kwargs) -> tuple[str, dict]:
         """
         Decides which pipeline to use and prepares arguments for it.
 
         Args:
-            file_path (str): Path to the input document.
             ext (str): File extension.
             **kwargs: Extraction and pipeline control options, including:
                 - prompt (str)
@@ -135,14 +148,19 @@ class DoclingReader(BaseReader):
                 - Else: uses default Markdown pipeline.
             - For other extensions: always uses Markdown pipeline.
         """
-        # Defaults
+
+        # ---- Initialization ---- #
+
         show_base64_images: bool = kwargs.get("show_base64_images", False)
-        page_placeholder: str = kwargs.get("page_placeholder", "<!-- page -->")
-        image_placeholder: str = kwargs.get("image_placeholder", "<!-- image -->")
+        page_placeholder: str = kwargs.get("page_placeholder", DEFAULT_PAGE_PLACEHOLDER)
+        image_placeholder: str = kwargs.get(
+            "image_placeholder", DEFAULT_IMAGE_PLACEHOLDER
+        )
         image_resolution: float = kwargs.get("image_resolution", 1.0)
         scan_pdf_pages: bool = kwargs.get("scan_pdf_pages", False)
 
-        # --- PDF logic ---
+        # ---- PDF logic ---- #
+
         if ext == "pdf":
             if scan_pdf_pages:
                 # Scan pages as images and extract their content
@@ -158,9 +176,12 @@ class DoclingReader(BaseReader):
                 if self.model:
                     if show_base64_images:
                         warnings.warn(
-                            "When using a model, base64 images are not rendered. So, deactivate the `show_base64_images` option or don't provide the model in the class constructor."
+                            "When using a model, base64 images are not rendered. "
+                            "Deactivate `show_base64_images` or do not provide a model "
+                            "to DoclingReader.",
+                            BaseReaderWarning,
                         )
-                    # Use VLM pipeline for the whole PDF
+                    # Read the whole PDF using a VLM
                     pipeline_args = {
                         "model": self.model,
                         "prompt": kwargs.get("prompt", DEFAULT_IMAGE_CAPTION_PROMPT),
@@ -178,8 +199,10 @@ class DoclingReader(BaseReader):
                         "ext": ext,
                     }
                     pipeline_name = "markdown"
+
+        # ---- Main logic ---- #
+
         else:
-            # For non-PDF: use markdown pipeline
             pipeline_args = {
                 "show_base64_images": show_base64_images,
                 "page_placeholder": page_placeholder,

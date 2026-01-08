@@ -161,7 +161,7 @@ def test_analyze_content_mime_type_fallback(mock_sdk):
         prompt="x", file=image_b64.encode("utf-8"), file_ext="unknown"
     )
     mock_types.Part.from_bytes.assert_called_once_with(
-        data=image_bytes, mime_type="image/jpeg"
+        data=image_bytes, mime_type="image/png"
     )
     assert result == "ok"
 
@@ -183,6 +183,6 @@ def test_analyze_content_accepts_str_file(mock_sdk):
     # Pass the base64 string, not bytes
     result = model.analyze_content(prompt="y", file=image_b64)
     mock_types.Part.from_bytes.assert_called_once_with(
-        data=image_bytes, mime_type="image/jpeg"
+        data=image_bytes, mime_type="image/png"
     )
     assert result == "works"

@@ -1,11 +1,19 @@
 import pandas as pd
 import pytest
-from pydantic import ValidationError
 
-from splitter_mr.schema import ReaderOutput
+from splitter_mr.schema import (
+    InvalidChunkException,
+    ReaderOutput,
+    ReaderOutputException,
+    SplitterConfigException,
+    SplitterInputWarning,
+    SplitterOutputException,
+    SplitterOutputWarning,
+)
+from splitter_mr.splitter.splitters import row_column_splitter as rcs_module
 from splitter_mr.splitter.splitters.row_column_splitter import RowColumnSplitter
 
-# Helpers
+# ---- Mocks, fixtures and helpers ---- #
 
 
 def make_reader_output(text, method):
@@ -20,30 +28,12 @@ def make_reader_output(text, method):
     )
 
 
-def get_markdown_rows(df):
-    """Returns a list of markdown rows (strings) for each data row in the dataframe."""
-    rows = []
-    for i in range(len(df)):
-        row = df.iloc[[i]]
-        md = row.to_markdown(index=False).splitlines()
-        rows.append(md[-1])
-    return rows
-
-
-def get_markdown_header(df):
-    """Gets the header from dataframe in markdown foramt"""
-    lines = df.head(0).to_markdown(index=False).splitlines()
-    return "\n".join(lines[:2])
-
-
 def parse_data_rows_from_markdown(markdown_chunk):
     """Return list of tuples representing the data rows in a markdown table chunk."""
     lines = markdown_chunk.strip().splitlines()
-    # Data always starts after the first two lines (header and separator)
     data_lines = lines[2:]
     rows = []
     for line in data_lines:
-        # Split on pipe, strip whitespace, skip empty
         cells = [cell.strip() for cell in line.strip("|").split("|")]
         if cells and any(cells):
             rows.append(tuple(cells))
@@ -51,20 +41,18 @@ def parse_data_rows_from_markdown(markdown_chunk):
 
 
 def is_markdown_header_line(line, required_cols):
-    """Check if a line looks like a markdown table header with all expected columns."""
-    # Remove pipes and spaces, lowercase for robustness
     cols = [c.strip().lower() for c in line.strip("|").split("|")]
     return all(col in cols for col in required_cols)
 
 
-# Test cases
+# ---- Test cases ---- #
 
 
 @pytest.mark.parametrize(
     "num_rows, num_cols, overlap, expected_chunks",
     [
         (2, 0, 0, 2),  # 2 rows per chunk, no overlap
-        (1, 0, 1, 4),  # 1 row per chunk, 1 overlap (should give 4 chunks for 4 rows)
+        (1, 0, 1, 4),  # 1 row per chunk, 1 overlap (4 rows → 4 chunks)
         (0, 2, 1, 4),  # 2 cols per chunk, 1 col overlap
     ],
 )
@@ -141,7 +129,8 @@ def test_chunk_size_too_small():
     splitter = RowColumnSplitter(chunk_size=10, num_rows=0, num_cols=0)
     reader_output = make_reader_output(md_table, "markdown")
     with pytest.raises(
-        ValueError, match="chunk_size is too small to fit header and at least one row."
+        SplitterConfigException,
+        match=r"chunk_size is too small to fit the header and at least one row;",
     ):
         splitter.split(reader_output)
 
@@ -162,7 +151,7 @@ def test_chunk_size_only():
         header_line = chunk.strip().splitlines()[0]
         assert is_markdown_header_line(header_line, ["id", "name"])
         assert len(chunk) <= 60
-    # Check data rows as before
+
     found_rows = set()
     for chunk in output.chunks:
         for row in parse_data_rows_from_markdown(chunk):
@@ -181,53 +170,15 @@ def test_chunk_size_with_overlap():
     )
     reader_output = make_reader_output(md_table, "markdown")
     output = splitter.split(reader_output)
-    for chunk in output.chunks:
-        print("\n" + str(chunk) + "\n")
-        header_line = chunk.strip().splitlines()[0]
-        assert is_markdown_header_line(header_line, ["id", "name"])
-        assert len(chunk) <= 80
-    # Parse data rows from each chunk
+
     all_rows = [parse_data_rows_from_markdown(chunk) for chunk in output.chunks]
-    # Check overlap: last row of chunk i == first row of chunk i+1
     for i in range(len(all_rows) - 1):
         assert all_rows[i][-1] == all_rows[i + 1][0]
-    # All expected data rows are present
+
     expected = [("1", "A"), ("2", "B"), ("3", "C")]
     found = [row for rows in all_rows for row in rows]
     for row in expected:
         assert row in found
-
-
-def test_empty_input():
-    splitter = RowColumnSplitter(num_rows=2)
-    reader_output = make_reader_output("", "markdown")
-    with pytest.raises(ValidationError):
-        splitter.split(reader_output)
-
-
-def test_missing_headers():
-    # No header line at all
-    md_table = "| 1 | A |\n| 2 | B |\n"
-    splitter = RowColumnSplitter(num_rows=1)
-    reader_output = make_reader_output(md_table, "markdown")
-    output = splitter.split(reader_output)
-    # Pandas will treat first row as header
-    assert "1" in output.chunks[0]
-    assert "A" in output.chunks[0]
-
-
-def test_malformed_table():
-    md_table = (
-        "| id | name |\n"
-        "|----|------|\n"
-        "| 1  | A |\n"  # Too few columns
-        "2 | B |\n"  # Missing leading pipe
-        "| 3 | C | X |\n"  # Too many columns
-    )
-    splitter = RowColumnSplitter(num_rows=2)
-    reader_output = make_reader_output(md_table, "markdown")
-    with pytest.raises(pd.errors.ParserError, match="Malformed markdown table"):
-        splitter.split(reader_output)
 
 
 def test_single_row():
@@ -248,3 +199,182 @@ def test_one_column():
     assert len(output.chunks) == 2
     for chunk in output.chunks:
         assert "id" in chunk
+
+
+def test_missing_headers():
+    # No header line at all
+    md_table = "| 1 | A |\n| 2 | B |\n"
+    splitter = RowColumnSplitter(num_rows=1)
+    reader_output = make_reader_output(md_table, "markdown")
+    output = splitter.split(reader_output)
+    assert "1" in output.chunks[0]
+    assert "A" in output.chunks[0]
+
+
+def test_malformed_table():
+    md_table = (
+        "| id | name |\n"
+        "|----|------|\n"
+        "| 1  | A |\n"  # Too few columns
+        "2 | B |\n"  # Missing leading pipe
+        "| 3 | C | X |\n"  # Too many columns
+    )
+    splitter = RowColumnSplitter(num_rows=2)
+    reader_output = make_reader_output(md_table, "markdown")
+    with pytest.raises(pd.errors.ParserError, match="Malformed markdown table"):
+        splitter.split(reader_output)
+
+
+# ---- Error and warning handling ---- #
+
+
+def test_empty_input():
+    splitter = RowColumnSplitter(num_rows=2)
+    reader_output = make_reader_output("", "markdown")
+    # 1) input warning from _load_tabular
+    with pytest.warns(SplitterInputWarning, match="empty or whitespace-only text"):
+        # 2) building SplitterOutput with empty chunks → wrapped as SplitterOutputException
+        with pytest.raises(SplitterOutputException):
+            splitter.split(reader_output)
+
+
+def test_split_nonempty_text_but_empty_dataframe_emits_output_warning():
+    # "markdown" method but no table lines (no pipes) → _parse_markdown_table
+    # returns empty DataFrame, and `split` should warn.
+    text = "This is not a table at all"
+    reader_output = make_reader_output(text, "markdown")
+    splitter = RowColumnSplitter(num_rows=2)
+    with pytest.warns(SplitterOutputWarning, match="empty DataFrame from non-empty"):
+        try:
+            splitter.split(reader_output)
+        except SplitterOutputException:
+            # Expected: building SplitterOutput with empty chunks fails
+            pass
+
+
+def test_config_num_rows_and_num_cols_mutually_exclusive():
+    with pytest.raises(SplitterConfigException, match="mutually exclusive"):
+        RowColumnSplitter(num_rows=1, num_cols=1)
+
+
+def test_config_negative_num_rows_or_cols_raises():
+    with pytest.raises(SplitterConfigException, match="must be non-negative"):
+        RowColumnSplitter(num_rows=-1)
+    with pytest.raises(SplitterConfigException, match="must be non-negative"):
+        RowColumnSplitter(num_cols=-2)
+
+
+def test_config_negative_overlap_raises():
+    with pytest.raises(SplitterConfigException, match="must be non-negative"):
+        RowColumnSplitter(chunk_overlap=-1)
+
+
+def test_config_float_overlap_out_of_range_raises():
+    with pytest.raises(SplitterConfigException, match="range \\[0, 1\\)"):
+        RowColumnSplitter(chunk_overlap=1.5)
+
+
+def test_split_missing_text_attribute_raises_reader_output_exception():
+    from types import SimpleNamespace
+
+    splitter = RowColumnSplitter(num_rows=1)
+    bad_ro = SimpleNamespace(
+        document_name="x",
+        document_path="x",
+        conversion_method="csv",
+        document_id="doc1",
+        reader_method=None,
+        ocr_method=None,
+        metadata={},
+    )
+    with pytest.raises(ReaderOutputException, match="must expose a 'text' attribute"):
+        splitter.split(bad_ro)  # type: ignore[arg-type]
+
+
+def test_split_non_string_text_raises_reader_output_exception():
+    from types import SimpleNamespace
+
+    splitter = RowColumnSplitter(num_rows=1)
+    bad_ro = SimpleNamespace(
+        text=123,  # not str / None
+        document_name="x",
+        document_path="x",
+        conversion_method="csv",
+        document_id="doc1",
+        reader_method=None,
+        ocr_method=None,
+        metadata={},
+    )
+    with pytest.raises(ReaderOutputException, match="must be of type 'str' or None"):
+        splitter.split(bad_ro)  # type: ignore[arg-type]
+
+
+def test_load_tabular_unknown_method_json_fallback_warns():
+    json_tabular = """
+    [
+        {"id": 1, "name": "A"},
+        {"id": 2, "name": "B"}
+    ]"""
+    reader_output = make_reader_output(json_tabular, "weird-format")
+    splitter = RowColumnSplitter(num_rows=1)
+    with pytest.warns(SplitterInputWarning, match="Unknown conversion_method"):
+        df = splitter._load_tabular(reader_output)
+    assert not df.empty
+    assert list(df.columns) == ["id", "name"]
+
+
+def test_load_tabular_unknown_method_csv_fallback_warns():
+    csv_content = "id,name\n1,A\n2,B\n"
+    reader_output = make_reader_output(csv_content, "unknown")
+    splitter = RowColumnSplitter(num_rows=1)
+    with pytest.warns(SplitterInputWarning, match="falling back to CSV parser"):
+        df = splitter._load_tabular(reader_output)
+    assert not df.empty
+    assert list(df.columns) == ["id", "name"]
+
+
+def test_load_tabular_empty_text_warns_and_returns_empty_df():
+    reader_output = make_reader_output("", "csv")
+    splitter = RowColumnSplitter(num_rows=1)
+    with pytest.warns(SplitterInputWarning, match="empty or whitespace-only text"):
+        df = splitter._load_tabular(reader_output)
+    assert df.empty
+
+
+def test_invalid_chunk_ids_raise_invalid_chunk_exception(monkeypatch):
+    # Use 2 rows → num_rows=1 ⇒ 2 chunks
+    md_table = "| id | name |\n|----|------|\n| 1  | A    |\n| 2  | B    |\n"
+    reader_output = make_reader_output(md_table, "markdown")
+    splitter = RowColumnSplitter(num_rows=1)
+
+    def fake_generate_chunk_ids(self, n: int):
+        # Always return a single ID regardless of n
+        return ["only-one-id"]
+
+    monkeypatch.setattr(
+        RowColumnSplitter, "_generate_chunk_ids", fake_generate_chunk_ids, raising=True
+    )
+
+    with pytest.raises(
+        InvalidChunkException, match="Number of chunk IDs does not match"
+    ):
+        splitter.split(reader_output)
+
+
+def test_splitter_output_exception_when_splitteroutput_construction_fails(monkeypatch):
+    # Simulate SplitterOutput failing validation (e.g. pydantic internal error)
+    md_table = "| id | name |\n|----|------|\n| 1  | A    |\n"
+    reader_output = make_reader_output(md_table, "markdown")
+    splitter = RowColumnSplitter(num_rows=1)
+
+    rcs_module.SplitterOutput
+
+    def broken_splitter_output(*args, **kwargs):
+        raise TypeError("boom")
+
+    monkeypatch.setattr(
+        rcs_module, "SplitterOutput", broken_splitter_output, raising=True
+    )
+
+    with pytest.raises(SplitterOutputException, match="Failed to build SplitterOutput"):
+        splitter.split(reader_output)

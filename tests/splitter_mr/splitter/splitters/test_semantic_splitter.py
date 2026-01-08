@@ -1,13 +1,21 @@
+from typing import Any, Dict, List
+
 import numpy as np
 import pytest
 
 from splitter_mr.embedding.base_embedding import BaseEmbedding
-from splitter_mr.schema import ReaderOutput, SplitterOutput
+from splitter_mr.schema import (
+    ReaderOutput,
+    ReaderOutputException,
+    SplitterConfigException,
+    SplitterInputWarning,
+    SplitterOutput,
+    SplitterOutputException,
+    SplitterOutputWarning,
+)
 from splitter_mr.splitter.splitters.semantic_splitter import SemanticSplitter
 
-# --------------------------
-# Test utilities & doubles
-# --------------------------
+# ---- Mocks, fixtures and helpers ---- #
 
 
 class DummyEmbedding(BaseEmbedding):
@@ -66,9 +74,60 @@ def make_reader(
     )
 
 
-# --------------------------
-# Basic behavior
-# --------------------------
+class FailingEmbedding(BaseEmbedding):
+    def __init__(self, model_name: str = "failing-emb") -> None:
+        # minimal concrete init for tests
+        self.model_name = model_name
+
+    def get_client(self) -> Any:
+        return None
+
+    def embed_text(self, text: str, **parameters: Dict[str, Any]) -> List[float]:
+        # Should never be called in this test
+        raise RuntimeError("embed_text should not be used")
+
+    def embed_documents(
+        self, texts: List[str], **parameters: Dict[str, Any]
+    ) -> List[List[float]]:
+        # Force failure to exercise error handling
+        raise RuntimeError("embedding boom")
+
+
+class WrongShapeEmbedding(BaseEmbedding):
+    def __init__(self, model_name: str = "wrong-shape-emb") -> None:
+        self.model_name = model_name
+
+    def get_client(self) -> Any:
+        return None
+
+    def embed_text(self, text: str, **parameters: Dict[str, Any]) -> List[float]:
+        return [0.0]
+
+    def embed_documents(
+        self, texts: List[str], **parameters: Dict[str, Any]
+    ) -> List[List[float]]:
+        # Return fewer embeddings than windows to trigger shape mismatch
+        return [[0.0] for _ in range(max(0, len(texts) - 1))]
+
+
+class NaNEmbedding(BaseEmbedding):
+    def __init__(self, model_name: str = "nan-emb") -> None:
+        self.model_name = model_name
+
+    def get_client(self) -> Any:
+        return None
+
+    def embed_text(self, text: str, **parameters: Dict[str, Any]) -> List[float]:
+        return [float("nan")]
+
+    def embed_documents(
+        self, texts: List[str], **parameters: Dict[str, Any]
+    ) -> List[List[float]]:
+        # Each embedding contains NaN; should trigger non-finite distance check
+        return [[float("nan")] for _ in texts]
+
+
+# ---- Test cases ---- #
 
 
 def test_single_sentence_returns_whole_text():
@@ -99,9 +158,7 @@ def test_two_sentences_gradient_mode_returns_both():
     assert out.chunks == ["Cats purr.", "Dogs bark."]
 
 
-# --------------------------
 # Threshold strategies
-# --------------------------
 
 
 @pytest.mark.parametrize(
@@ -126,7 +183,7 @@ def test_threshold_strategies_do_not_crash_and_produce_chunks(strategy):
 
     assert len(out.chunks) >= 1
     # Ensure chunks do not exceed original text length and are non-empty
-    assert all(c for c in out.chunks)
+    assert all(out.chunks)
     assert "".join(out.chunks).replace(" ", "") in text.replace(" ", "")
 
 
@@ -170,9 +227,7 @@ def test_number_of_chunks_targets_approximate_count():
     assert 2 <= len(out.chunks) <= 4
 
 
-# --------------------------
 # Min-size behavior (chunk_size acts as minimum)
-# --------------------------
 
 
 def test_min_size_merges_small_chunks():
@@ -187,15 +242,19 @@ def test_min_size_merges_small_chunks():
         chunk_size=len(text) + 10,  # larger than total text => one chunk
     )
     ro = make_reader(text)
-    out = splitter.split(ro)
+
+    # In this configuration, we only see the "no semantic breakpoints" warning
+    with pytest.warns(
+        SplitterOutputWarning,
+        match="did not detect any semantic breakpoints",
+    ):
+        out = splitter.split(ro)
 
     assert len(out.chunks) == 1
     assert out.chunks[0].replace(" ", "") == text.replace(" ", "")
 
 
-# --------------------------
 # Buffer size effects
-# --------------------------
 
 
 def test_buffer_size_changes_windows():
@@ -218,9 +277,7 @@ def test_buffer_size_changes_windows():
     assert len(out1.chunks) >= 1
 
 
-# --------------------------
 # Batch embedding usage
-# --------------------------
 
 
 def test_batch_embedding_is_used(monkeypatch):
@@ -258,9 +315,7 @@ def test_embed_text_not_called_when_batch_available(monkeypatch):
     assert len(out.chunks) >= 1
 
 
-# --------------------------
 # Metadata & output integrity
-# --------------------------
 
 
 def test_output_metadata_is_propagated():
@@ -279,19 +334,15 @@ def test_output_metadata_is_propagated():
     assert out.metadata is not None
 
 
-# --------------------------
 # Edge cases
-# --------------------------
 
 
-def test_empty_text_returns_single_empty_chunk():
+def test_empty_text_raises_reader_output_exception():
     emb = DummyEmbedding()
     splitter = SemanticSplitter(embedding=emb, buffer_size=1, chunk_size=1)
     ro = make_reader("")
 
-    import pytest
-
-    with pytest.raises(ValueError, match="No text has been provided"):
+    with pytest.raises(ReaderOutputException, match="empty or None"):
         splitter.split(ro)
 
 
@@ -323,3 +374,194 @@ def test_interquartile_strategy_path_executes():
     out = splitter.split(ro)
 
     assert len(out.chunks) >= 1
+
+
+# --- Error & warning handling tests --- #
+
+# Config-time validation
+
+
+def test_invalid_embedding_backend_raises_config_exception():
+    class BadEmbedding:
+        # No embed_documents method
+        pass
+
+    with pytest.raises(SplitterConfigException, match="embed_documents"):
+        SemanticSplitter(embedding=BadEmbedding(), buffer_size=1, chunk_size=1)
+
+
+def test_negative_buffer_size_raises_config_exception():
+    emb = DummyEmbedding()
+    with pytest.raises(SplitterConfigException, match="buffer_size must be >= 0"):
+        SemanticSplitter(embedding=emb, buffer_size=-1, chunk_size=1)
+
+
+def test_invalid_breakpoint_type_raises_config_exception():
+    emb = DummyEmbedding()
+    with pytest.raises(
+        SplitterConfigException, match="Invalid breakpoint_threshold_type"
+    ):
+        SemanticSplitter(
+            embedding=emb,
+            buffer_size=1,
+            breakpoint_threshold_type="not-a-strategy",
+            chunk_size=1,
+        )
+
+
+def test_invalid_percentile_amount_raises_config_exception():
+    emb = DummyEmbedding()
+    # 123.0 is outside [0, 100] and not in (0,1]
+    with pytest.raises(SplitterConfigException, match="breakpoint_threshold_amount"):
+        SemanticSplitter(
+            embedding=emb,
+            buffer_size=1,
+            breakpoint_threshold_type="percentile",
+            breakpoint_threshold_amount=123.0,
+            chunk_size=1,
+        )
+
+
+def test_number_of_chunks_must_be_positive_and_finite():
+    emb = DummyEmbedding()
+    with pytest.raises(SplitterConfigException, match="positive finite"):
+        SemanticSplitter(embedding=emb, buffer_size=1, number_of_chunks=0, chunk_size=1)
+
+    with pytest.raises(SplitterConfigException, match="positive finite"):
+        SemanticSplitter(
+            embedding=emb,
+            buffer_size=1,
+            number_of_chunks=float("inf"),
+            chunk_size=1,
+        )
+
+
+def test_ratio_percentile_amount_emits_input_warning():
+    emb = DummyEmbedding()
+    # 0.8 in (0,1] should be treated as ratio and scaled, with a warning
+    with pytest.warns(SplitterInputWarning, match="ratio"):
+        splitter = SemanticSplitter(
+            embedding=emb,
+            buffer_size=1,
+            breakpoint_threshold_type="percentile",
+            breakpoint_threshold_amount=0.8,
+            chunk_size=1,
+        )
+    # sanity: still works
+    ro = make_reader("A. B. C.")
+    out = splitter.split(ro)
+    assert len(out.chunks) >= 1
+
+
+def test_non_integer_number_of_chunks_emits_input_warning():
+    emb = DummyEmbedding()
+    with pytest.warns(SplitterInputWarning, match="not an integer"):
+        splitter = SemanticSplitter(
+            embedding=emb,
+            buffer_size=1,
+            number_of_chunks=3.7,
+            chunk_size=1,
+        )
+    ro = make_reader("A. B. C. D.")
+    out = splitter.split(ro)
+    assert len(out.chunks) >= 1
+
+
+# Runtime embedding errors & distances
+
+
+def test_embedding_backend_failure_raises_splitter_output_exception():
+    emb = FailingEmbedding()
+    splitter = SemanticSplitter(embedding=emb, buffer_size=1, chunk_size=1)
+    ro = make_reader("One. Two. Three.")
+    with pytest.raises(SplitterOutputException, match="Embedding backend failed"):
+        splitter.split(ro)
+
+
+def test_embedding_shape_mismatch_raises_splitter_output_exception():
+    emb = WrongShapeEmbedding()
+    splitter = SemanticSplitter(embedding=emb, buffer_size=1, chunk_size=1)
+    ro = make_reader("One. Two. Three.")
+    with pytest.raises(
+        SplitterOutputException, match="does not match the number of windows"
+    ):
+        splitter.split(ro)
+
+
+def test_non_finite_distances_raise_splitter_output_exception():
+    emb = NaNEmbedding()
+    splitter = SemanticSplitter(embedding=emb, buffer_size=1, chunk_size=1)
+    ro = make_reader("One. Two. Three.")
+    with pytest.raises(
+        SplitterOutputException, match="Non-finite values .* semantic distances"
+    ):
+        splitter.split(ro)
+
+
+def test_sentence_splitter_failure_is_wrapped_in_splitter_output_exception(monkeypatch):
+    emb = DummyEmbedding()
+    splitter = SemanticSplitter(embedding=emb, buffer_size=1, chunk_size=1)
+    ro = make_reader("Hello. World.")
+
+    def boom(*_args, **_kwargs):
+        raise RuntimeError("sentence splitting boom")
+
+    # Patch the underlying SentenceSplitter, so the wrapper in
+    # SemanticSplitter._split_into_sentences catches and re-raises.
+    monkeypatch.setattr(splitter._sentence_splitter, "split", boom, raising=True)
+
+    with pytest.raises(SplitterOutputException, match="Sentence splitting failed"):
+        splitter.split(ro)
+
+
+# Runtime warnings (SplitterOutputWarning)
+
+
+def test_number_of_chunks_larger_than_possible_emits_output_warning():
+    text = "A. B."
+    emb = DummyEmbedding()
+    splitter = SemanticSplitter(
+        embedding=emb,
+        buffer_size=1,
+        number_of_chunks=10,  # larger than max possible (=2)
+        chunk_size=1,
+    )
+    ro = make_reader(text)
+
+    with pytest.warns(SplitterOutputWarning, match="larger than the maximum possible"):
+        out = splitter.split(ro)
+
+    # Still returns sensible chunks
+    assert 1 <= len(out.chunks) <= 2
+
+
+def test_no_breakpoints_emits_output_warning(monkeypatch):
+    text = "A. B. C."
+    emb = DummyEmbedding()
+    splitter = SemanticSplitter(
+        embedding=emb,
+        buffer_size=1,
+        breakpoint_threshold_type="percentile",
+        breakpoint_threshold_amount=50.0,
+        chunk_size=1,
+    )
+    ro = make_reader(text)
+
+    # Force _calculate_breakpoint_threshold to choose a threshold above all values
+    def fake_calc_threshold(self, distances):
+        # threshold greater than any value in ref array -> no indices_above
+        return 1.0, [0.0 for _ in distances]
+
+    monkeypatch.setattr(
+        SemanticSplitter,
+        "_calculate_breakpoint_threshold",
+        fake_calc_threshold,
+        raising=True,
+    )
+
+    with pytest.warns(
+        SplitterOutputWarning, match="did not detect any semantic breakpoints"
+    ):
+        out = splitter.split(ro)
+
+    assert len(out.chunks) == 1

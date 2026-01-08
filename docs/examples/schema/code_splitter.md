@@ -37,7 +37,7 @@ print(reader_output.model_dump_json(indent=4))
     split_params={\"chunk_size\": chunk_size, \"language\": self.language},\n            metadata=metadata,\n        )\n        return output\n",
         "document_name": "code_example.py",
         "document_path": "https://raw.githubusercontent.com/andreshere00/Splitter_MR/refs/heads/main/data/code_example.py",
-        "document_id": "fadd9a15-06ba-488a-8c9c-9fd09ebbe82c",
+        "document_id": "066b580e-4c01-4e99-af82-4c0510c2fdd2",
         "conversion_method": "txt",
         "reader_method": "vanilla",
         "ocr_method": null,
@@ -110,7 +110,7 @@ print(splitter_output)
 
     chunks=['from langchain_text_splitters import Language, RecursiveCharacterTextSplitter\n\nfrom ...schema import ReaderOutput, SplitterOutput\nfrom ..base_splitter import BaseSplitter\n\n\ndef get_langchain_language(lang_str: str) -> Language:\n    """\n    Map a string language name to Langchain Language enum.\n    Raises ValueError if not found.\n    """\n    lookup = {lang.name.lower(): lang for lang in Language}\n    key = lang_str.lower()\n    if key not in lookup:\n        raise ValueError(
     ...
-    945-9485-e915b616319d', 'c2a4cdb9-1cea-40ff-8474-949de5cb3cbb', 'cf065bed-bf46-4984-b3ca-f38297737b56', 'ef15e01d-98ad-4112-a4fd-cef4c2179772'] document_name='code_example.py' document_path='https://raw.githubusercontent.com/andreshere00/Splitter_MR/refs/heads/main/data/code_example.py' document_id='fadd9a15-06ba-488a-8c9c-9fd09ebbe82c' conversion_method='txt' reader_method='vanilla' ocr_method=None split_method='code_splitter' split_params={'chunk_size': 1000, 'language': 'python'} metadata={}
+    44e-85e0-16452b46a563', '104f647b-defa-4ce1-a9d7-c465a62712d5', '4a9b8b7b-5cbe-43f4-9089-3e4fa823d110', 'a258847d-9b4e-40e6-8d04-8f4a9d71a702'] document_name='code_example.py' document_path='https://raw.githubusercontent.com/andreshere00/Splitter_MR/refs/heads/main/data/code_example.py' document_id='066b580e-4c01-4e99-af82-4c0510c2fdd2' conversion_method='txt' reader_method='vanilla' ocr_method=None split_method='code_splitter' split_params={'chunk_size': 1000, 'language': 'python'} metadata={}
 
 
 

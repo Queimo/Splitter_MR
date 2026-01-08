@@ -40,7 +40,7 @@ print(reader_output.model_dump_json(indent=4))
     tural del Toboso, nombre a su parecer músico y peregrino y significativo, como todos los demás que a él y a sus cosas había puesto.",
         "document_name": "quijote_example.txt",
         "document_path": "https://raw.githubusercontent.com/andreshere00/Splitter_MR/refs/heads/main/data/quijote_example.txt",
-        "document_id": "b22470b2-e72a-4b25-95fe-f29d092cb9ec",
+        "document_id": "af95487a-a1f3-4374-94a2-f0efe2dc469d",
         "conversion_method": "txt",
         "reader_method": "vanilla",
         "ocr_method": null,
@@ -101,26 +101,26 @@ print(splitter_output.model_dump_json(indent=4))
             "Capítulo Primero\n\nQue trata de la condición y ejercicio del famoso hidalgo D. Quijote de la Mancha",
             "En un lugar de la Mancha, de cuyo nombre no quiero acordarme, no ha mucho tiempo que vivía un hidalgo de los de lanza en astillero, adarga antigua, rocín flaco y galgo corredor. Una olla de algo más vaca que carnero, salpicón las más noches, duelos y quebrantos los sábados, lentejas los viernes, algún palomino de añadidura los domingos, consumían las tres par
     ...
-    72a-4b25-95fe-f29d092cb9ec",
+    1f3-4374-94a2-f0efe2dc469d",
         "conversion_method": "txt",
         "reader_method": "vanilla",
         "ocr_method": null,
         "split_method": "recursive_character_splitter",
         "split_params": {
             "chunk_size": 1000,
-            "chunk_overlap": 0.1,
+            "chunk_overlap": 100,
             "separators": [
                 "\n\n",
                 "\n",
                 " ",
                 ".",
                 ",",
+                "",
                 "​",
                 "，",
                 "、",
                 "．",
-                "。",
-                ""
+                "。"
             ]
         },
         "metadata": {}

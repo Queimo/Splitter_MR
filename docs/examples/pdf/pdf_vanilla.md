@@ -198,14 +198,14 @@ print(output.text)
     
     <!-
     ...
-    nterpretive challenges. Effective
+    ical and interpretive challenges. Effective
     conversion tools must blend text extraction, document analysis, and sometimes
     machine learning techniques (such as OCR or structure recognition) to produce
     usable, readable, and faithful Markdown output. As a result, perfect conversion
     is rarely possible, and manual review and cleanup are often required.
     
     <!-- image -->
-    *Caption: A vibrant hummingbird gracefully hovers near orange blossoms, showcasing its iridescent plumage against a soft, blurred background.*
+    *Caption: A vibrant hummingbird with iridescent blue-green feathers feeding on an orange flower against a blurred green background.*
     
 
 
@@ -295,13 +295,12 @@ print(output.text)
     
     # A sample PDF
     
-    Converting PDF files to other formats, such as Markdown, is a surprisingly complex task due to the nature of the PDF format itself. PDF (Portable Document Format) was designed primarily for preserving the visual layout of documents, making them look the same across different devices and platforms. However, this design goal introduces several challenges when trying to extract and convert the underlying content into a more flexible, structured format like Markdown.
-    
-    
+    Converting PDF files to other formats, such as Markdown, is a surprisingly complex task due to the nature of the PDF format itself. PDF (Portable Document Format) was designed primarily for preserving the visual layout of documents, making them look the same across different devices and platforms. _However, this design goal introduces several challenges when trying to extract and convert the underlying content into a more flexible, structured format like Markdown._
     ...
-    y seem simple on the surface, converting PDFs to formats like Markdown involves a series of technical and interpretive challenges. Effective conversion tools must blend text extraction, document analysis, and sometimes machine learning techniques (such as OCR or structure recognition) to produce usable, readable, and faithful Markdown output. As a result, perfect conversion is rarely possible, and manual review and cleanup are often required.
+     on the surface, converting PDFs to formats like Markdown involves a series of technical and interpretive challenges. Effective conversion tools must blend text extraction, document analysis, and sometimes machine learning techniques (such as OCR or structure recognition) to produce usable, readable, and faithful Markdown output. As a result, perfect conversion is rarely possible, and manual review and cleanup are often required.
     
-    ![Hummingbird](https://example.com/hummingbird.jpg)
+    ![Image of a hummingbird near orange flowers](attachment/image)
+    
 
 
 
@@ -329,21 +328,24 @@ print(output.text)
     
     <!-
     ...
-    0%;
-                height: auto;
-                border: 2px solid #ccc;
-                border-radius: 10px;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            }
-        </style>
+    mes
+    machine learning techniques (such as OCR or structure recognition) to produce
+    usable, readable, and faithful Markdown output. As a result, perfect conversion
+    is rarely possible, and manual review and cleanup are often required.
+    
+    <!-- image -->
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Hummingbird Image</title>
     </head>
     <body>
-        <img src="https://example.com/path-to-your-image.jpg" alt="Hummingbird">
+        <img src="https://example.com/path-to-hummingbird-image.jpg" alt="Hummingbird feeding on flower" />
     </body>
     </html>
     ```
-    
-    Make sure to replace `"https://example.com/path-to-your-image.jpg"` with the actual URL of your image. This HTML will create a simple webpage that displays the image of the hummingbird with some basic styling.
     
 
 

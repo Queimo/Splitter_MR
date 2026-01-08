@@ -1,6 +1,22 @@
-# v1.0.x
+# Version 1 (v1.x.x)
 
 > **Version 1.0.0: First stable release with full Reader, Splitter, Embedding and Vision model support.**
+
+## v1.1.0
+
+**Improved traceability** by adding new custom error and warning handling.
+
+### Features
+
+- Add **error handling** and **warnings** in ALL SplitterMR components.
+- Refactor code by constants. Transform them into `Literal` to make the code more robust, flexible and for type hinting.
+- Refactor some function signatures to match expected behavior.
+
+### Documentation
+
+- Fix some docstrings for better readability.
+- Update docstring documentation.
+- Update examples.
 
 ## v1.0.1
 

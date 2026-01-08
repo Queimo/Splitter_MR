@@ -1,5 +1,6 @@
 import base64
 import importlib
+import logging
 import sys
 from io import BytesIO
 from unittest.mock import MagicMock, patch
@@ -311,7 +312,7 @@ def _reload_pkg():
     Force a clean re-import of the package under test so monkeypatching
     importlib.import_module affects the import path resolution each time.
     """
-    for key in list(sys.modules.keys()):
+    for key in list(sys.modules.keys()):  # NOSONAR (S7504)
         if key == PKG or key.startswith(PKG + "."):
             sys.modules.pop(key, None)
     return importlib.import_module(PKG)
@@ -347,7 +348,201 @@ def test_pdfplumber_import_succeeds_when_docling_missing(monkeypatch):
     monkeypatch.setattr(importlib, "import_module", fake_import_module)
 
     mod = _reload_pkg()
-    PDFPlumberReader = getattr(mod, "PDFPlumberReader")
+    pdf_plumber_reader = getattr(mod, "PDFPlumberReader")
     # Basic sanity: it's a class/type or callable
-    assert hasattr(PDFPlumberReader, "__name__")
-    assert PDFPlumberReader.__name__ == "PDFPlumberReader"
+    assert hasattr(pdf_plumber_reader, "__name__")
+    assert pdf_plumber_reader.__name__ == "PDFPlumberReader"
+
+
+def test_read_invalid_file_path_none_raises():
+    reader = PDFPlumberReader()
+    with pytest.raises(RuntimeError, match="file_path must be a non-empty string"):
+        reader.read(None)  # type: ignore[arg-type]
+
+
+def test_read_invalid_file_path_empty_raises():
+    reader = PDFPlumberReader()
+    with pytest.raises(RuntimeError, match="file_path must be a non-empty string"):
+        reader.read("   ")
+
+
+@patch("pdfplumber.open")
+def test_read_pdfplumber_open_failure_is_wrapped(mock_open):
+    mock_open.side_effect = Exception("cannot open")
+    reader = PDFPlumberReader()
+
+    with pytest.raises(
+        RuntimeError, match=r"Failed to open/read PDF 'fakefile\.pdf': cannot open"
+    ):
+        reader.read("fakefile.pdf")
+
+
+@patch("pdfplumber.open")
+def test_read_page_extraction_failure_is_wrapped_with_page_context(mock_open):
+    # Make pdfplumber.open succeed, but extraction fail for page 1
+    fake_page = MagicMock()
+    fake_pdf = MagicMock()
+    fake_pdf.pages = [fake_page]
+    mock_open.return_value.__enter__.return_value = fake_pdf
+
+    reader = PDFPlumberReader()
+    with patch.object(reader, "extract_page_blocks", side_effect=Exception("boom")):
+        with pytest.raises(
+            RuntimeError,
+            match=r"Failed extracting content blocks on page 1 of 'fakefile\.pdf': boom",
+        ):
+            reader.read("fakefile.pdf")
+
+
+def test_group_by_lines_invalid_tolerance_raises(mock_word_lines):
+    reader = PDFPlumberReader()
+    with pytest.raises(RuntimeError, match="tolerance must be a positive number"):
+        reader.group_by_lines(mock_word_lines, tolerance=0)
+
+
+def test_group_by_lines_words_not_list_raises():
+    reader = PDFPlumberReader()
+    with pytest.raises(RuntimeError, match="words must be a list"):
+        reader.group_by_lines(words="not-a-list")  # type: ignore[arg-type]
+
+
+def test_group_by_lines_none_returns_empty():
+    reader = PDFPlumberReader()
+    assert reader.group_by_lines(None) == []  # type: ignore[arg-type]
+
+
+def test_extract_tables_find_tables_failure_logs_and_returns_empty(caplog):
+    reader = PDFPlumberReader()
+    page = MagicMock()
+    page.find_tables.side_effect = Exception("nope")
+
+    caplog.set_level(logging.WARNING)
+    tables, bboxes = reader.extract_tables(page, page_num=1)
+
+    assert tables == []
+    assert bboxes == []
+    assert any(
+        "Failed to find tables on page 1" in rec.message for rec in caplog.records
+    )
+
+
+def test_extract_tables_single_table_extract_failure_logs_and_continues(caplog):
+    reader = PDFPlumberReader()
+
+    good_tbl = MagicMock()
+    good_tbl.bbox = (0, 10, 100, 50)
+    good_tbl.extract.return_value = [["H1", "H2"], ["v1", "v2"]]
+
+    bad_tbl = MagicMock()
+    bad_tbl.bbox = (0, 60, 100, 90)
+    bad_tbl.extract.side_effect = Exception("bad table")
+
+    page = MagicMock()
+    page.find_tables.return_value = [bad_tbl, good_tbl]
+
+    caplog.set_level(logging.WARNING)
+    tables, bboxes = reader.extract_tables(page, page_num=2)
+
+    # bad one is skipped, good one remains
+    assert len(tables) == 1
+    assert tables[0]["type"] == "table"
+    assert bboxes == [(0, 10, 100, 50)]
+    assert any(
+        "Failed to extract a table on page 2" in rec.message for rec in caplog.records
+    )
+
+
+def test_extract_images_annotation_failure_logged_and_in_annotation(caplog):
+    reader = PDFPlumberReader()
+
+    # Build a page with one image bbox
+    page = MagicMock()
+    page.images = [{"x0": 0, "top": 0, "x1": 10, "bottom": 10}]
+    page.within_bbox.return_value.to_image = _fake_to_image_factory(b"imgbytes")
+
+    # Model fails during annotation
+    model = DummyModel()
+    model.analyze_content = MagicMock(side_effect=Exception("model down"))
+
+    caplog.set_level(logging.WARNING)
+    imgs = reader.extract_images(page, page_num=1, model=model, prompt="p")
+
+    assert len(imgs) == 1
+    assert "**Annotation error:**" in imgs[0]["annotation"]
+    assert any(
+        "Model annotation failed for image" in rec.message for rec in caplog.records
+    )
+
+
+def test_extract_images_malformed_bbox_is_logged_and_skipped(caplog):
+    reader = PDFPlumberReader()
+
+    # Missing required keys like x0/top/x1/bottom
+    page = MagicMock()
+    page.images = [{"top": 0}]  # malformed
+    caplog.set_level(logging.WARNING)
+
+    imgs = reader.extract_images(page, page_num=1, model=None)
+    assert imgs == []
+    assert any(
+        "Error extracting/encoding image" in rec.message for rec in caplog.records
+    )
+
+
+def test_extract_pages_as_images_invalid_resolution_raises():
+    reader = PDFPlumberReader()
+    with pytest.raises(RuntimeError, match="resolution must be an int in the range"):
+        reader.extract_pages_as_images("file.pdf", resolution=10)
+
+
+@patch("pdfplumber.open")
+def test_extract_pages_as_images_open_failure_is_wrapped(mock_open):
+    mock_open.side_effect = Exception("open fail")
+    reader = PDFPlumberReader()
+
+    with pytest.raises(
+        RuntimeError, match=r"Failed to open/read PDF 'file\.pdf': open fail"
+    ):
+        reader.extract_pages_as_images("file.pdf")
+
+
+@patch("pdfplumber.open")
+def test_extract_pages_as_images_page_rasterize_failure_is_wrapped_with_page(mock_open):
+    fake_page = MagicMock()
+    fake_page.to_image.side_effect = Exception("raster fail")
+
+    fake_pdf = MagicMock()
+    fake_pdf.pages = [fake_page]
+    mock_open.return_value.__enter__.return_value = fake_pdf
+
+    reader = PDFPlumberReader()
+
+    with pytest.raises(
+        RuntimeError, match=r"Failed to rasterize page 1 from 'file\.pdf': raster fail"
+    ):
+        reader.extract_pages_as_images("file.pdf")
+
+
+def test_describe_pages_requires_model():
+    reader = PDFPlumberReader()
+    with pytest.raises(RuntimeError, match="model is required for describe_pages"):
+        reader.describe_pages("file.pdf", model=None)  # type: ignore[arg-type]
+
+
+def test_blocks_to_markdown_none_returns_empty():
+    reader = PDFPlumberReader()
+    assert reader.blocks_to_markdown(None) == ""  # type: ignore[arg-type]
+
+
+def test_analyze_content_extract_words_failure_logs_and_returns_empty(caplog):
+    reader = PDFPlumberReader()
+    page = MagicMock()
+    page.extract_words.side_effect = Exception("word fail")
+
+    caplog.set_level(logging.WARNING)
+    out = reader.analyze_content(page, page_num=1, table_bboxes=[])
+
+    assert out == []
+    assert any(
+        "Failed to extract words on page 1" in rec.message for rec in caplog.records
+    )

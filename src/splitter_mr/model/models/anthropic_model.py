@@ -5,7 +5,10 @@ from typing import Any, Dict, Optional
 from openai import OpenAI
 
 from ...schema import (
+    DEFAULT_ANTHROPIC_ENTRYPOINT,
+    DEFAULT_ANTHROPIC_MODEL,
     DEFAULT_IMAGE_CAPTION_PROMPT,
+    DEFAULT_IMAGE_EXTENSION,
     OPENAI_MIME_BY_EXTENSION,
     SUPPORTED_OPENAI_MIME_TYPES,
     OpenAIClientImageContent,
@@ -26,7 +29,7 @@ class AnthropicVisionModel(BaseVisionModel):
     def __init__(
         self,
         api_key: Optional[str] = None,
-        model_name: str = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-20250514"),
+        model_name: str = os.getenv("ANTHROPIC_MODEL", DEFAULT_ANTHROPIC_MODEL),
     ) -> None:
         """
         Initialize the AnthropicVisionModel.
@@ -45,7 +48,7 @@ class AnthropicVisionModel(BaseVisionModel):
                     "Anthropic API key not provided and 'ANTHROPIC_API_KEY' env var not set."
                 )
 
-        base_url: str = ("https://api.anthropic.com/v1/",)
+        base_url: str = DEFAULT_ANTHROPIC_ENTRYPOINT
         self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.model_name = model_name
 
@@ -63,7 +66,7 @@ class AnthropicVisionModel(BaseVisionModel):
         file: Optional[bytes],
         prompt: str = DEFAULT_IMAGE_CAPTION_PROMPT,
         *,
-        file_ext: Optional[str] = "png",
+        file_ext: Optional[str] = DEFAULT_IMAGE_EXTENSION,
         **parameters: Dict[str, Any],
     ) -> str:
         """
@@ -85,7 +88,7 @@ class AnthropicVisionModel(BaseVisionModel):
         if file is None:
             raise ValueError("No file content provided for vision model.")
 
-        ext = (file_ext or "png").lower()
+        ext = (file_ext or DEFAULT_IMAGE_EXTENSION).lower()
         mime_type = (
             OPENAI_MIME_BY_EXTENSION.get(ext)
             or mimetypes.types_map.get(f".{ext}")  # noqa: W503

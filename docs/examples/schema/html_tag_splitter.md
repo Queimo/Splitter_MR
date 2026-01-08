@@ -36,7 +36,7 @@ print(reader_output.model_dump_json(indent=4))
     td>Chocolate</td></tr>\n      <tr><td>0006</td><td>filled</td><td>Filled</td><td>Regular</td><td>Maple</td></tr>\n    </tbody>\n  </table>",
         "document_name": "sweet_list.html",
         "document_path": "https://raw.githubusercontent.com/andreshere00/Splitter_MR/refs/heads/main/data/sweet_list.html",
-        "document_id": "413c5f15-c7bc-407f-862e-9f392aa46c95",
+        "document_id": "965c401f-3f46-463a-90d5-023c0defe1f0",
         "conversion_method": "html",
         "reader_method": "vanilla",
         "ocr_method": null,
@@ -118,7 +118,7 @@ print(splitter_output.model_dump_json(indent=4))
     ...
        "document_name": "sweet_list.html",
         "document_path": "https://raw.githubusercontent.com/andreshere00/Splitter_MR/refs/heads/main/data/sweet_list.html",
-        "document_id": "413c5f15-c7bc-407f-862e-9f392aa46c95",
+        "document_id": "965c401f-3f46-463a-90d5-023c0defe1f0",
         "conversion_method": "html",
         "reader_method": "vanilla",
         "ocr_method": null,
@@ -131,6 +131,10 @@ print(splitter_output.model_dump_json(indent=4))
         },
         "metadata": {}
     }
+
+
+    /Users/aherencia/Documents/Projects/Splitter_MR/src/splitter_mr/splitter/splitters/html_tag_splitter.py:279: BatchHtmlTableWarning: Batch process has been detected. It will be split by elements in HTML table.
+      warnings.warn(
 
 
 
