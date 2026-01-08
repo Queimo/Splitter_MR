@@ -30,6 +30,8 @@ nav:
     - Splitters: api_reference/splitter.md
     - Vision models: api_reference/model.md
     - Embedding models: api_reference/embedding.md
+    - Exceptions: api_reference/exceptions.md
+    - Warnings: api_reference/warnings.md
   - Examples:
     - Overview: examples/examples.md
     - Reading:
