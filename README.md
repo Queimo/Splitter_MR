@@ -191,6 +191,12 @@ output = reader.read("10.1016@j.jpowsour.2024.234553 (1).xml")
 print(output.conversion_method)  # md
 print(output.reader_method)      # elsevier_xml
 print(output.text[:1000])
+
+# Optional: keep old behavior and append tables in a dedicated section
+output_no_inline_tables = reader.read(
+    "10.1016@j.jpowsour.2024.234553 (1).xml",
+    place_tables_near_mentions=False,
+)
 ```
 
 **Assumptions and behavior:**
@@ -198,6 +204,8 @@ print(output.text[:1000])
 - This reader is specialized for Elsevier-style, namespaced XML (for example, roots like `full-text-retrieval-response`).
 - It expects common Elsevier structures such as `coredata/title`, `abstract`, `authkeywords`, `sections/body`, `table`, and `bibliography/reference`.
 - XML tags and namespaces are removed from the output text, and section/table content is normalized to Markdown.
+- Tables are placed inline **by default**: each table is inserted right before the first paragraph where its label (e.g., `Table 1`) is mentioned, to improve readability.
+- If no in-text mention is found (or if `place_tables_near_mentions=False`), tables are emitted in a `## Tables` section.
 - If the input is **not** an `.xml` file, `ElsevierXmlReader` delegates to `VanillaReader` behavior.
 - If a document does not expose all expected Elsevier nodes, the reader falls back gracefully and emits the text it can extract.
 

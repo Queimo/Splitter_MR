@@ -18,6 +18,10 @@ class ElsevierXmlReader(VanillaReader):
     Non-XML inputs are delegated to ``VanillaReader``.
     """
 
+    def __init__(self, place_tables_near_mentions: bool = True) -> None:
+        super().__init__()
+        self.place_tables_near_mentions = place_tables_near_mentions
+
     def read(self, file_path: str | Path = None, **kwargs: Any) -> ReaderOutput:
         if file_path is None:
             raise ReaderConfigException("file_path must be provided.")
@@ -30,9 +34,15 @@ class ElsevierXmlReader(VanillaReader):
         if ext != "xml":
             return super().read(file_path=file_path, **kwargs)
 
+        place_near_mentions = kwargs.get(
+            "place_tables_near_mentions", self.place_tables_near_mentions
+        )
+
         try:
             xml_text = file_path_obj.read_text(encoding="utf-8")
-            markdown_text = self._xml_to_markdown(xml_text)
+            markdown_text = self._xml_to_markdown(
+                xml_text, place_tables_near_mentions=bool(place_near_mentions)
+            )
         except ET.ParseError as exc:
             raise VanillaReaderException(f"Invalid XML file {file_path}: {exc}") from exc
         except OSError as exc:
@@ -50,7 +60,9 @@ class ElsevierXmlReader(VanillaReader):
             metadata=kwargs.get("metadata", {}),
         )
 
-    def _xml_to_markdown(self, xml_text: str) -> str:
+    def _xml_to_markdown(
+        self, xml_text: str, *, place_tables_near_mentions: bool = True
+    ) -> str:
         root = ET.fromstring(xml_text)
 
         sections: list[str] = []
@@ -79,26 +91,32 @@ class ElsevierXmlReader(VanillaReader):
             sections.append("## Keywords\n")
             sections.append(", ".join(dict.fromkeys(keywords)) + "\n")
 
+        table_blocks_by_label, table_order = self._collect_tables(root)
+        placed_tables: set[str] = set()
+
         body_nodes = root.findall(".//{*}body//{*}section")
         if not body_nodes:
             body_nodes = root.findall(".//{*}sections/{*}section")
         if body_nodes:
             sections.append("## Body\n")
             for node in body_nodes:
-                md_section = self._section_to_markdown(node)
+                md_section = self._section_to_markdown(
+                    node,
+                    table_blocks_by_label=table_blocks_by_label,
+                    placed_tables=placed_tables,
+                    place_tables_near_mentions=place_tables_near_mentions,
+                )
                 if md_section:
                     sections.append(md_section)
 
-        table_blocks: list[str] = []
-        seen_table_blocks: set[str] = set()
-        for table_node in root.findall(".//{*}table"):
-            table_markdown = self._table_to_markdown(table_node)
-            if table_markdown and table_markdown not in seen_table_blocks:
-                seen_table_blocks.add(table_markdown)
-                table_blocks.append(table_markdown)
-        if table_blocks:
+        unplaced_table_blocks = [
+            table_blocks_by_label[label]
+            for label in table_order
+            if label not in placed_tables and label in table_blocks_by_label
+        ]
+        if unplaced_table_blocks:
             sections.append("## Tables\n")
-            sections.extend(f"{table}\n" for table in table_blocks)
+            sections.extend(f"{table}\n" for table in unplaced_table_blocks)
 
         references = [
             self._clean_text("".join(node.itertext()))
@@ -114,8 +132,36 @@ class ElsevierXmlReader(VanillaReader):
 
         return "\n".join(sections).strip()
 
-    def _section_to_markdown(self, section_node: ET.Element, level: int = 3) -> str:
+    def _collect_tables(self, root: ET.Element) -> tuple[dict[str, str], list[str]]:
+        table_blocks_by_label: dict[str, str] = {}
+        table_order: list[str] = []
+
+        for idx, table_node in enumerate(root.findall(".//{*}table"), start=1):
+            table_markdown = self._table_to_markdown(table_node)
+            if not table_markdown:
+                continue
+            label = self._first_non_empty(
+                self._find_text(table_node, "./{*}label"),
+                self._find_text(table_node, "./{*}alt-text"),
+                f"Table {idx}",
+            )
+            if label not in table_blocks_by_label:
+                table_blocks_by_label[label] = table_markdown
+                table_order.append(label)
+
+        return table_blocks_by_label, table_order
+
+    def _section_to_markdown(
+        self,
+        section_node: ET.Element,
+        level: int = 3,
+        table_blocks_by_label: dict[str, str] | None = None,
+        placed_tables: set[str] | None = None,
+        place_tables_near_mentions: bool = True,
+    ) -> str:
         chunks: list[str] = []
+        table_blocks_by_label = table_blocks_by_label or {}
+        placed_tables = placed_tables if placed_tables is not None else set()
 
         title = self._first_non_empty(
             self._find_text(section_node, "./{*}title"),
@@ -127,8 +173,18 @@ class ElsevierXmlReader(VanillaReader):
 
         for para in section_node.findall("./{*}para"):
             paragraph = self._clean_text("".join(para.itertext()))
-            if paragraph:
-                chunks.append(f"{paragraph}\n")
+            if not paragraph:
+                continue
+
+            if place_tables_near_mentions and table_blocks_by_label:
+                for table_label, table_markdown in table_blocks_by_label.items():
+                    if table_label in placed_tables:
+                        continue
+                    if re.search(rf"\b{re.escape(table_label)}\b", paragraph, re.IGNORECASE):
+                        chunks.append(f"{table_markdown}\n")
+                        placed_tables.add(table_label)
+
+            chunks.append(f"{paragraph}\n")
 
         for list_item in section_node.findall(".//{*}list-item"):
             item_text = self._clean_text("".join(list_item.itertext()))
@@ -136,7 +192,13 @@ class ElsevierXmlReader(VanillaReader):
                 chunks.append(f"- {item_text}\n")
 
         for child_section in section_node.findall("./{*}section"):
-            nested = self._section_to_markdown(child_section, level=level + 1)
+            nested = self._section_to_markdown(
+                child_section,
+                level=level + 1,
+                table_blocks_by_label=table_blocks_by_label,
+                placed_tables=placed_tables,
+                place_tables_near_mentions=place_tables_near_mentions,
+            )
             if nested:
                 chunks.append(nested)
 

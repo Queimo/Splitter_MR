@@ -22,7 +22,7 @@ SAMPLE_XML = """<?xml version='1.0' encoding='UTF-8'?>
           <ce:sections>
             <ce:section>
               <ce:section-title>Introduction</ce:section-title>
-              <ce:para>Energy transition demands robust storage systems.</ce:para>
+              <ce:para>As shown in Table 1, energy transition demands robust storage systems.</ce:para>
               <ce:table>
                 <ce:label>Table 1</ce:label>
                 <ce:caption>
@@ -40,10 +40,6 @@ SAMPLE_XML = """<?xml version='1.0' encoding='UTF-8'?>
                       <entry>Zn-air</entry>
                       <entry>1.65</entry>
                     </row>
-                    <row>
-                      <entry>Mg-air</entry>
-                      <entry>1.81</entry>
-                    </row>
                   </tbody>
                 </tgroup>
               </ce:table>
@@ -57,7 +53,7 @@ SAMPLE_XML = """<?xml version='1.0' encoding='UTF-8'?>
 """
 
 
-def test_elsevier_xml_reader_generates_clean_markdown(tmp_path: Path):
+def test_elsevier_xml_reader_generates_clean_markdown_with_table_near_mention(tmp_path: Path):
     xml_file = tmp_path / "paper.xml"
     xml_file.write_text(SAMPLE_XML, encoding="utf-8")
 
@@ -74,6 +70,25 @@ def test_elsevier_xml_reader_generates_clean_markdown(tmp_path: Path):
     assert "| Zn-air | 1.65 |" in result.text
     assert "ce:section-title" not in result.text
     assert "<ce:" not in result.text
+
+    table_idx = result.text.find("**Table 1 — Electrochemical performances of typical MAB technologies.**")
+    mention_idx = result.text.find("As shown in Table 1, energy transition demands robust storage systems.")
+    assert table_idx != -1 and mention_idx != -1
+    assert table_idx < mention_idx
+
+
+def test_elsevier_xml_reader_can_disable_near_mention_table_placement(tmp_path: Path):
+    xml_file = tmp_path / "paper.xml"
+    xml_file.write_text(SAMPLE_XML, encoding="utf-8")
+
+    reader = ElsevierXmlReader()
+    result = reader.read(xml_file, place_tables_near_mentions=False)
+
+    assert "## Tables" in result.text
+    mention_idx = result.text.find("As shown in Table 1, energy transition demands robust storage systems.")
+    tables_section_idx = result.text.find("## Tables")
+    assert mention_idx != -1 and tables_section_idx != -1
+    assert mention_idx < tables_section_idx
 
 
 def test_elsevier_xml_reader_delegates_non_xml(tmp_path: Path):
