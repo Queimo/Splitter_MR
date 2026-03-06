@@ -5,11 +5,13 @@ if TYPE_CHECKING:
     from .docling_reader import DoclingReader  # noqa: F401
     from .markitdown_reader import MarkItDownReader  # noqa: F401
     from .vanilla_reader import VanillaReader  # noqa: F401
+    from .elsevier_xml_reader import ElsevierXmlReader  # noqa: F401
 
 REGISTRY: Dict[str, Tuple[str, str]] = {
     "VanillaReader": (".vanilla_reader", "VanillaReader"),
     "MarkItDownReader": (".markitdown_reader", "MarkItDownReader"),
     "DoclingReader": (".docling_reader", "DoclingReader"),
+    "ElsevierXmlReader": (".elsevier_xml_reader", "ElsevierXmlReader"),
 }
 
 __all__ = list(REGISTRY.keys())

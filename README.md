@@ -39,13 +39,14 @@
 
 SplitterMR can read data from multiples sources and files. To read the files, it uses the Reader components, which inherits from a Base abstract class, `BaseReader`. This object allows you to read the files as a properly formatted string, or convert the files into another format (such as `markdown` or `json`). 
 
-Currently, there are supported three readers: `VanillaReader`, and `MarkItDownReader` and `DoclingReader`. These are the differences between each Reader component:
+Currently, there are supported four readers: `VanillaReader`, `MarkItDownReader`, `DoclingReader`, and `ElsevierXmlReader`. These are the differences between each Reader component:
 
 | **Reader**             | **Unstructured files & PDFs** | **MS Office suite files** | **Tabular data** | **Files with hierarchical schema** | **Image files** | **Markdown conversion** |
 |------------------------|-------------------------------|---------------------------|------------------|------------------------------------|-----------------|-------------------------|
 | [**`VanillaReader`**](https://andreshere00.github.io/Splitter_MR/api_reference/reader/#vanillareader)    | `txt`, `md`, `pdf` | `xlsx`, `docx`, `pptx` | `csv`, `tsv`, `parquet` | `json`, `yaml`, `html`, `xml` | `jpg`, `png`, `webp`, `gif` | Yes                     |
 | [**`MarkItDownReader`**](https://andreshere00.github.io/Splitter_MR/api_reference/reader/#markitdownreader) | `txt`, `md`, `pdf` | `docx`, `xlsx`, `pptx` | `csv`, `tsv` | `json`, `html`, `xml`                    | `jpg`, `png`, `pneg`        | Yes                     |
 | [**`DoclingReader`**](https://andreshere00.github.io/Splitter_MR/api_reference/reader/#doclingreader)    | `txt`, `md`, `pdf` | `docx`, `xlsx`, `pptx` | –            | `html`, `xhtml`                 | `png`, `jpeg`, `tiff`, `bmp`, `webp` | Yes                     |
+| **`ElsevierXmlReader`** | – | – | – | Elsevier full-text `xml` (ScienceDirect API-style responses) | – | Yes (specialized XML -> Markdown) |
 
 ### Several splitting methods
 
@@ -148,7 +149,7 @@ from splitter_mr.reader import VanillaReader
 reader = VanillaReader()
 ```
 
-To read any file, provide the file path within the `read()` method. If you use `DoclingReader` or `MarkItDownReader`, your files will be automatically parsed to markdown text format. The result of this reader will be a `ReaderOutput` object, a dictionary with the following shape:
+To read any file, provide the file path within the `read()` method. If you use `DoclingReader`, `MarkItDownReader`, or `ElsevierXmlReader`, your files will be parsed to markdown text format. The result of this reader will be a `ReaderOutput` object, a dictionary with the following shape:
 
 ```python 
 reader_output = reader.read('https://raw.githubusercontent.com/andreshere00/Splitter_MR/refs/heads/main/data/lorem_ipsum.txt')
@@ -168,6 +169,45 @@ metadata={}
 
 > [!NOTE]
 > Note that you can read from an URL, a variable and from a `file_path`. See [Developer guide](https://andreshere00.github.io/Splitter_MR/api_reference/reader/).
+
+
+### Elsevier XML reader (scientific papers)
+
+If you downloaded papers using the Elsevier full-text XML API, you can use `ElsevierXmlReader` to convert those XML files into cleaner Markdown. It extracts and formats:
+
+- title
+- abstract
+- author keywords
+- hierarchical body sections
+- lists
+- tables (rendered as Markdown tables)
+- references
+
+```python
+from splitter_mr.reader import ElsevierXmlReader
+
+reader = ElsevierXmlReader()
+output = reader.read("10.1016@j.jpowsour.2024.234553 (1).xml")
+print(output.conversion_method)  # md
+print(output.reader_method)      # elsevier_xml
+print(output.text[:1000])
+
+# Optional: keep old behavior and append tables in a dedicated section
+output_no_inline_tables = reader.read(
+    "10.1016@j.jpowsour.2024.234553 (1).xml",
+    place_tables_near_mentions=False,
+)
+```
+
+**Assumptions and behavior:**
+
+- This reader is specialized for Elsevier-style, namespaced XML (for example, roots like `full-text-retrieval-response`).
+- It expects common Elsevier structures such as `coredata/title`, `abstract`, `authkeywords`, `sections/body`, `table`, and `bibliography/reference`.
+- XML tags and namespaces are removed from the output text, and section/table content is normalized to Markdown.
+- Tables are placed inline **by default**: each table is inserted right before the first paragraph where its label (e.g., `Table 1`) is mentioned, to improve readability.
+- If no in-text mention is found (or if `place_tables_near_mentions=False`), tables are emitted in a `## Tables` section.
+- If the input is **not** an `.xml` file, `ElsevierXmlReader` delegates to `VanillaReader` behavior.
+- If a document does not expose all expected Elsevier nodes, the reader falls back gracefully and emits the text it can extract.
 
 ### Split text
 
