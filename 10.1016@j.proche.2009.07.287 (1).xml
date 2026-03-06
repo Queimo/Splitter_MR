@@ -1,0 +1,680 @@
+<full-text-retrieval-response xmlns="http://www.elsevier.com/xml/svapi/article/dtd" xmlns:bk="http://www.elsevier.com/xml/bk/dtd" xmlns:cals="http://www.elsevier.com/xml/common/cals/dtd" xmlns:ce="http://www.elsevier.com/xml/common/dtd" xmlns:ja="http://www.elsevier.com/xml/ja/dtd" xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:sa="http://www.elsevier.com/xml/common/struct-aff/dtd" xmlns:sb="http://www.elsevier.com/xml/common/struct-bib/dtd" xmlns:tb="http://www.elsevier.com/xml/common/table/dtd" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xocs="http://www.elsevier.com/xml/xocs/dtd" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:prism="http://prismstandard.org/namespaces/basic/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><coredata><prism:url>https://api.elsevier.com/content/article/pii/S1876619609002885</prism:url><dc:identifier>doi:10.1016/j.proche.2009.07.287</dc:identifier><eid>1-s2.0-S1876619609002885</eid><prism:doi>10.1016/j.proche.2009.07.287</prism:doi><pii>S1876-6196(09)00288-5</pii><dc:title>Polymer composite strain sensor based on dielectrophoretically aligned tellurium nanorods </dc:title><prism:publicationName>Procedia Chemistry</prism:publicationName><prism:aggregationType>Journal</prism:aggregationType><pubType>fla</pubType><prism:issn>18766196</prism:issn><prism:volume>1</prism:volume><prism:issueIdentifier>1</prism:issueIdentifier><prism:startingPage>1151</prism:startingPage><prism:endingPage>1154</prism:endingPage><prism:pageRange>1151-1154</prism:pageRange><prism:number>1</prism:number><dc:format>text/xml</dc:format><prism:coverDate>2009-09-30</prism:coverDate><prism:coverDisplayDate>September 2009</prism:coverDisplayDate><prism:copyright>Copyright © 2009 Published by Elsevier B.V.</prism:copyright><prism:publisher>Published by Elsevier B.V.</prism:publisher><prism:issueName>Proceedings of the Eurosensors XXIII conference</prism:issueName><dc:creator>Nocke, A.</dc:creator><dc:creator>Richter, S.</dc:creator><dc:creator>Wolf, M.</dc:creator><dc:creator>Gerlach, G.</dc:creator><dc:description>
+                  A novel sensor set-up for mechanical sensing based on a polymer composite with aligned filler material is presented. In our approach tellurium nanorods are aligned by dielectrophoresis and embedded in a thin layer of a visco-elastic polymer on top of an elastomeric polymer foil. The stretching of the polymer foil increases the gap between neighboring particles, which leads to a significant increase in resistance. The highest reproducible resistance change is about 180% at a strain of 1%. Additionally, it is possible to perform direction-sensitive measurements due to the anisotropic alignment of the conducting network.
+               </dc:description><openaccess>1</openaccess><openaccessArticle>true</openaccessArticle><openaccessType>Full</openaccessType><openArchiveArticle>false</openArchiveArticle><openaccessSponsorName/><openaccessSponsorType>ElsevierWaived</openaccessSponsorType><openaccessUserLicense>http://creativecommons.org/licenses/by-nc-nd/3.0/</openaccessUserLicense><dcterms:subject>Strain sensor</dcterms:subject><dcterms:subject>polymer composite</dcterms:subject><dcterms:subject>dielectrophoresis</dcterms:subject><dcterms:subject>tellurium nanorods</dcterms:subject><link href="https://api.elsevier.com/content/article/pii/S1876619609002885" rel="self"/><link href="https://www.sciencedirect.com/science/article/pii/S1876619609002885" rel="scidir"/></coredata><scopus-id>71549152536</scopus-id><scopus-eid>2-s2.0-71549152536</scopus-eid><link href="https://api.elsevier.com/content/abstract/scopus_id/71549152536" rel="abstract"/><originalText><xocs:doc xsi:schemaLocation="http://www.elsevier.com/xml/xocs/dtd http://null/schema/dtds/document/fulltext/xcr/xocs-article.xsd"><xocs:meta xmlns:xoe="http://www.elsevier.com/xml/xoe/dtd">
+      <xocs:content-family>serial</xocs:content-family>
+      <xocs:content-type>JL</xocs:content-type>
+      <xocs:cid>278684</xocs:cid>
+      <xocs:ssids>
+         <xocs:ssid type="alllist">291210</xocs:ssid>
+         <xocs:ssid type="subj">291786</xocs:ssid>
+         <xocs:ssid type="subj">291790</xocs:ssid>
+         <xocs:ssid type="subj">291802</xocs:ssid>
+         <xocs:ssid type="subj">291864</xocs:ssid>
+         <xocs:ssid type="content">31</xocs:ssid>
+         <xocs:ssid type="oa">90</xocs:ssid>
+      </xocs:ssids>
+      <xocs:srctitle>Procedia Chemistry</xocs:srctitle>
+      <xocs:normalized-srctitle>PROCEDIACHEMISTRY</xocs:normalized-srctitle>
+      <xocs:orig-load-date yyyymmdd="20090831">2009-08-31</xocs:orig-load-date>
+      <xocs:available-online-date yyyymmdd="20090904">2009-09-04</xocs:available-online-date>
+      <xocs:ew-transaction-id>2015-05-27T12:57:49</xocs:ew-transaction-id>
+      <xocs:eid>1-s2.0-S1876619609002885</xocs:eid>
+      <xocs:pii-formatted>S1876-6196(09)00288-5</xocs:pii-formatted>
+      <xocs:pii-unformatted>S1876619609002885</xocs:pii-unformatted>
+      <xocs:doi>10.1016/j.proche.2009.07.287</xocs:doi>
+      <xocs:item-stage>S300</xocs:item-stage>
+      <xocs:item-version-number>S300.5</xocs:item-version-number>
+      <xocs:item-weight>HEAD-AND-TAIL</xocs:item-weight>
+      <xocs:hub-eid>1-s2.0-S1876619609X00021</xocs:hub-eid>
+      <xocs:timestamp yyyymmdd="20150527">2015-05-27T12:18:33.205022-04:00</xocs:timestamp>
+      <xocs:dco>0</xocs:dco>
+      <xocs:tomb>0</xocs:tomb>
+      <xocs:date-search-begin>20090901</xocs:date-search-begin>
+      <xocs:date-search-end>20090930</xocs:date-search-end>
+      <xocs:year-nav>2009</xocs:year-nav>
+      <xocs:indexeddate epoch="1251676800">2009-08-31T00:00:00Z</xocs:indexeddate>
+      <xocs:articleinfo>rawtext articleinfo articletitlenorm authfirstinitialnorm authfirstsurnamenorm cid cids confeditor contenttype copyright crossmark dateloaded dateloadedtxt datesearch datesort dateupdated dco docsubtype doctype doi eid ewtransactionid hubeid indexeddate issfirst issn issnnorm issuelist itemstage itemtransactionid itemweight oauserlicense openaccess openarchive pg pgfirst pglast pii piinorm pubdateend pubdatestart pubdatetxt pubyr sortorder srctitle srctitlenorm srctype ssids alllist content oa subj tomb vol volfirst volissue volumelist webpdf webpdfpagecount yearnav affil articletitle auth authfirstini authfull authkeywords authlast primabst pubtype ref</xocs:articleinfo>
+      <xocs:issns>
+         <xocs:issn-primary-formatted>1876-6196</xocs:issn-primary-formatted>
+         <xocs:issn-primary-unformatted>18766196</xocs:issn-primary-unformatted>
+      </xocs:issns>
+      <xocs:crossmark is-crossmark="0">false</xocs:crossmark>
+      <xocs:vol-first>1</xocs:vol-first>
+      <xocs:volume-list>
+         <xocs:volume>1</xocs:volume>
+      </xocs:volume-list>
+      <xocs:iss-first>1</xocs:iss-first>
+      <xocs:issue-list>
+         <xocs:issue>1</xocs:issue>
+      </xocs:issue-list>
+      <xocs:vol-iss-suppl-text>Volume 1, Issue 1</xocs:vol-iss-suppl-text>
+      <xocs:sort-order>288</xocs:sort-order>
+      <xocs:first-fp>1151</xocs:first-fp>
+      <xocs:last-lp>1154</xocs:last-lp>
+      <xocs:pages>
+         <xocs:first-page>1151</xocs:first-page>
+         <xocs:last-page>1154</xocs:last-page>
+      </xocs:pages>
+      <xocs:cover-date-orig>
+         <xocs:start-date>200909</xocs:start-date>
+      </xocs:cover-date-orig>
+      <xocs:cover-date-text>September 2009</xocs:cover-date-text>
+      <xocs:cover-date-start>2009-09-01</xocs:cover-date-start>
+      <xocs:cover-date-end>2009-09-30</xocs:cover-date-end>
+      <xocs:cover-date-year>2009</xocs:cover-date-year>
+      <xocs:title-editors-groups>
+         <xocs:title-editors-group>
+            <ce:title>Proceedings of the Eurosensors XXIII conference</ce:title>
+            <ce:editors>
+               <ce:author-group>
+                  <ce:author>
+                     <ce:given-name>Juergen</ce:given-name>
+                     <ce:surname>Brugger</ce:surname>
+                  </ce:author>
+                  <ce:affiliation>
+                     <ce:textfn>EPFL-IMT, Switzerland</ce:textfn>
+                  </ce:affiliation>
+               </ce:author-group>
+               <ce:author-group>
+                  <ce:author>
+                     <ce:given-name>Danick</ce:given-name>
+                     <ce:surname>Briand</ce:surname>
+                  </ce:author>
+                  <ce:affiliation>
+                     <ce:textfn>EPFL-IMT, Switzerland</ce:textfn>
+                  </ce:affiliation>
+               </ce:author-group>
+            </ce:editors>
+         </xocs:title-editors-group>
+      </xocs:title-editors-groups>
+      <xocs:document-type>article</xocs:document-type>
+      <xocs:document-subtype>fla</xocs:document-subtype>
+      <xocs:copyright-line>Copyright © 2009 Published by Elsevier B.V.</xocs:copyright-line>
+      <xocs:normalized-article-title>POLYMERCOMPOSITESTRAINSENSORBASEDDIELECTROPHORETICALLYALIGNEDTELLURIUMNANORODS</xocs:normalized-article-title>
+      <xocs:normalized-first-auth-surname>NOCKE</xocs:normalized-first-auth-surname>
+      <xocs:normalized-first-auth-initial>A</xocs:normalized-first-auth-initial>
+      <xocs:references>
+         <xocs:ref-info refid="bib1">
+            <xocs:ref-normalized-surname>STAR</xocs:ref-normalized-surname>
+            <xocs:ref-pub-year>2008</xocs:ref-pub-year>
+            <xocs:ref-first-fp>6550</xocs:ref-first-fp>
+            <xocs:ref-last-lp>6570</xocs:ref-last-lp>
+            <xocs:ref-normalized-initial>A</xocs:ref-normalized-initial>
+         </xocs:ref-info>
+         <xocs:ref-info refid="bib2">
+            <xocs:ref-normalized-surname>LI</xocs:ref-normalized-surname>
+            <xocs:ref-pub-year>2008</xocs:ref-pub-year>
+            <xocs:ref-normalized-initial>Y</xocs:ref-normalized-initial>
+         </xocs:ref-info>
+         <xocs:ref-info refid="bib3">
+            <xocs:ref-normalized-surname>KADEN</xocs:ref-normalized-surname>
+            <xocs:ref-pub-year>2004</xocs:ref-pub-year>
+            <xocs:ref-first-fp>129</xocs:ref-first-fp>
+            <xocs:ref-last-lp>133</xocs:ref-last-lp>
+            <xocs:ref-normalized-initial>H</xocs:ref-normalized-initial>
+         </xocs:ref-info>
+         <xocs:ref-info refid="bib4">
+            <xocs:ref-normalized-surname>MURUGARAJ</xocs:ref-normalized-surname>
+            <xocs:ref-pub-year>2006</xocs:ref-pub-year>
+            <xocs:ref-first-fp>2072</xocs:ref-first-fp>
+            <xocs:ref-last-lp>2078</xocs:ref-last-lp>
+            <xocs:ref-normalized-initial>P</xocs:ref-normalized-initial>
+         </xocs:ref-info>
+         <xocs:ref-info refid="bib5">
+            <xocs:ref-normalized-surname>KNITE</xocs:ref-normalized-surname>
+            <xocs:ref-pub-year>2004</xocs:ref-pub-year>
+            <xocs:ref-first-fp>142</xocs:ref-first-fp>
+            <xocs:ref-last-lp>149</xocs:ref-last-lp>
+            <xocs:ref-normalized-initial>M</xocs:ref-normalized-initial>
+         </xocs:ref-info>
+         <xocs:ref-info refid="bib6">
+            <xocs:ref-normalized-surname>COCHRANE</xocs:ref-normalized-surname>
+            <xocs:ref-pub-year>2007</xocs:ref-pub-year>
+            <xocs:ref-first-fp>473</xocs:ref-first-fp>
+            <xocs:ref-last-lp>492</xocs:ref-last-lp>
+            <xocs:ref-normalized-initial>C</xocs:ref-normalized-initial>
+         </xocs:ref-info>
+         <xocs:ref-info refid="bib7">
+            <xocs:ref-normalized-surname>MOTT</xocs:ref-normalized-surname>
+            <xocs:ref-pub-year>1979</xocs:ref-pub-year>
+            <xocs:ref-normalized-initial>N</xocs:ref-normalized-initial>
+            <xocs:ref-normalized-srctitle>ELECTRONICPROCESSESINNONCRYSTALLINEMATERIALS</xocs:ref-normalized-srctitle>
+         </xocs:ref-info>
+         <xocs:ref-info refid="bib8">
+            <xocs:ref-normalized-surname>OVERHOF</xocs:ref-normalized-surname>
+            <xocs:ref-pub-year>1976</xocs:ref-pub-year>
+            <xocs:ref-first-fp>239</xocs:ref-first-fp>
+            <xocs:ref-last-lp>265</xocs:ref-last-lp>
+            <xocs:ref-normalized-initial>H</xocs:ref-normalized-initial>
+            <xocs:ref-normalized-srctitle>FESTKORPERPROBLEME16</xocs:ref-normalized-srctitle>
+            <xocs:ref-normalized-article-title>HOPPINGCONDUCTIVITYINDISORDEREDSOLIDS</xocs:ref-normalized-article-title>
+         </xocs:ref-info>
+         <xocs:ref-info refid="bib9">
+            <xocs:ref-normalized-surname>NUSSBAUM</xocs:ref-normalized-surname>
+            <xocs:ref-pub-year>1954</xocs:ref-pub-year>
+            <xocs:ref-first-fp>337</xocs:ref-first-fp>
+            <xocs:ref-last-lp>342</xocs:ref-last-lp>
+            <xocs:ref-normalized-initial>A</xocs:ref-normalized-initial>
+         </xocs:ref-info>
+         <xocs:ref-info refid="bib10">
+            <xocs:ref-normalized-surname>MAYERS</xocs:ref-normalized-surname>
+            <xocs:ref-pub-year>2002</xocs:ref-pub-year>
+            <xocs:ref-first-fp>1875</xocs:ref-first-fp>
+            <xocs:ref-last-lp>1881</xocs:ref-last-lp>
+            <xocs:ref-normalized-initial>B</xocs:ref-normalized-initial>
+         </xocs:ref-info>
+      </xocs:references>
+      <xocs:refkeys>
+         <xocs:refkey3>NOCKEX2009X1151</xocs:refkey3>
+         <xocs:refkey4lp>NOCKEX2009X1151X1154</xocs:refkey4lp>
+         <xocs:refkey4ai>NOCKEX2009X1151XA</xocs:refkey4ai>
+         <xocs:refkey5>NOCKEX2009X1151X1154XA</xocs:refkey5>
+      </xocs:refkeys>
+      <xocs:open-access>
+         <xocs:oa-article-status is-open-access="1" is-open-archive="0">Full</xocs:oa-article-status>
+         <xocs:oa-access-effective-date>2013-07-16T12:27:55Z</xocs:oa-access-effective-date>
+         <xocs:oa-sponsor>
+            <xocs:oa-sponsor-type>ElsevierWaived</xocs:oa-sponsor-type>
+         </xocs:oa-sponsor>
+         <xocs:oa-user-license>http://creativecommons.org/licenses/by-nc-nd/3.0/</xocs:oa-user-license>
+         <xocs:oa-access-inherited-from winid="http://vtw.elsevier.com/content/oaw/GEN_UNBOUNDED_ESWaived">OA-Window</xocs:oa-access-inherited-from>
+      </xocs:open-access>
+      <xocs:attachment-metadata-doc>
+         <xocs:attachment-set-type>item</xocs:attachment-set-type>
+         <xocs:pii-formatted>S1876-6196(09)00288-5</xocs:pii-formatted>
+         <xocs:pii-unformatted>S1876619609002885</xocs:pii-unformatted>
+         <xocs:eid>1-s2.0-S1876619609002885</xocs:eid>
+         <xocs:doi>10.1016/j.proche.2009.07.287</xocs:doi>
+         <xocs:cid>278684</xocs:cid>
+         <xocs:timestamp>2015-05-27T12:18:33.205022-04:00</xocs:timestamp>
+         <xocs:cover-date-start>2009-09-01</xocs:cover-date-start>
+         <xocs:cover-date-end>2009-09-30</xocs:cover-date-end>
+         <xocs:attachments>
+            <xocs:web-pdf>
+               <xocs:attachment-eid>1-s2.0-S1876619609002885-main.pdf</xocs:attachment-eid>
+               <xocs:ucs-locator>https://s3.amazonaws.com/prod-ucs-content-store-us-east/content/pii:S1876619609002885/MAIN/application/pdf/bd22f7269fb0251c7a624d86221d1ed6/main.pdf</xocs:ucs-locator>
+               <xocs:ucs-locator>https://s3-eu-west-1.amazonaws.com/prod-ucs-content-store-eu-west/content/pii:S1876619609002885/MAIN/application/pdf/bd22f7269fb0251c7a624d86221d1ed6/main.pdf</xocs:ucs-locator>
+               <xocs:filename>main.pdf</xocs:filename>
+               <xocs:extension>pdf</xocs:extension>
+               <xocs:pdf-optimized>true</xocs:pdf-optimized>
+               <xocs:filesize>268244</xocs:filesize>
+               <xocs:web-pdf-purpose>MAIN</xocs:web-pdf-purpose>
+               <xocs:web-pdf-page-count>4</xocs:web-pdf-page-count>
+               <xocs:web-pdf-images>
+                  <xocs:web-pdf-image>
+                     <xocs:attachment-eid>1-s2.0-S1876619609002885-main_1.png</xocs:attachment-eid>
+                     <xocs:ucs-locator>https://s3-eu-west-1.amazonaws.com/prod-ucs-content-store-eu-west/content/pii:S1876619609002885/PREVIEW/image/png/17c34a7ce71b86b340be2502f84b44bc/main_1.png</xocs:ucs-locator>
+                     <xocs:ucs-locator>https://s3.amazonaws.com/prod-ucs-content-store-us-east/content/pii:S1876619609002885/PREVIEW/image/png/17c34a7ce71b86b340be2502f84b44bc/main_1.png</xocs:ucs-locator>
+                     <xocs:filename>main_1.png</xocs:filename>
+                     <xocs:extension>png</xocs:extension>
+                     <xocs:filesize>60390</xocs:filesize>
+                     <xocs:pixel-height>849</xocs:pixel-height>
+                     <xocs:pixel-width>656</xocs:pixel-width>
+                     <xocs:attachment-type>IMAGE-WEB-PDF</xocs:attachment-type>
+                     <xocs:pdf-page-num>1</xocs:pdf-page-num>
+                  </xocs:web-pdf-image>
+               </xocs:web-pdf-images>
+            </xocs:web-pdf>
+         </xocs:attachments>
+      </xocs:attachment-metadata-doc>
+   </xocs:meta><xocs:rawtext xmlns:xoe="http://www.elsevier.com/xml/xoe/dtd"> www.elsevier.com/locate/procedia   Proceedings of the Eurosensors XXIII conference  Polymer composite strain sensor based on dielectrophoretically  aligned tellurium nanorods  A. Nocke a, *, S. Richter a , M. Wolf a , G.Gerlach a   a Solid-State Electronics Laboratory, Technische UniversitÃ¤t Dresden, HelmholtzstraÃŸe 18, 01062 Dresden, Germany    Abstract  A novel sensor set-up for mechanical sensing based on a polymer composite with aligned filler material is presented. In our  approach tellurium nanorods are aligned by dielectrophoresis and embedded in a thin layer of a visco-elastic polymer on top of  an elastomeric polymer foil. The stretching of the polymer foil increases the gap between neighboring particles, which leads to a  significant increase in resistance. The highest reproducible resistance change is about 180 % at a strain of 1 %. Additionally, it is  possible to perform direction-sensitive measurements due to the anisotropic alignment of the conducting network.     Keywords: Strain sensor; polymer composite; dielectrophoresis; tellurium nanorods  1. Introduction  Polymer composites with electrically conducting filler materials are under intensive investigation within the last  years. In terms of sensors, such material systems show very promising properties for a wide range of sensor  principles. The major reason for this is the possibility to tailor the material properties very precisely to the desired  application. Typically, the polymer matrix is designed to react on the sensor stimulus which results in a change of  size or morphology of the composite. This leads to a deformation of the electrically conducting filler network  causing a change of its resistance that can be detected by simple read-out electronics. Examples for this concept are  chemical sensors [1-3], being used to detect various gases, solvents, and pH-values, as well as temperature [4] and  mechanical sensors [5,6].   Mechanical sensors, as discussed in this work, are used to detect strain, force, or pressure. Ordinary inorganic  strain sensors use piezoresistive, piezoelectric, magnetic, or capacitive effects to measure the desired mechanical  effect. Although they are capable of performing precise measurements, the alternative use of composite polymer  materials enables significant advantages in terms of easy sensor fabrication and cost-effective materials. Examples  for such mechanical composite sensors having a homogenous filler distribution are composites of the elastomers  polyisoprene [5] or evoprene [6] filled with carbon black. They show suitable sensor properties at filler amounts of  (10â€¦20) % with resistance changes of up to a factor of 100 at strains of 40 %. Major disadvantage is the high filler  content, which limits the manufacturability strongly, especially when it comes to sensors with dimensions in the  micrometer range.     * Corresponding author. Tel.: +49-351-463-36076 ; fax: +49-351-463-32320 .   E-mail address: Andreas.Nocke@tu-dresden.de .   Procedia  Chemistry   1876-6196/09  Â© 2009 Published by Elsevier B.V.  doi:10.1016/j.proche.2009.07.287 Procedia Chemistry 1 (2009) 1151â€“1154  Open access under CC BY-NC-ND license.  Therefore, the concept under investigation in this work goes one step further. In contrast to homogenous polymer  composites with statistically distributed filler particles, they are aligned using a tailored electric field  (dielectrophoresis). The used sensor set-up and working principle are presented in figure 1. Aligned filler particles  are embedded in a thin layer of a visco-elastic polymer on top of a thick polymer foil with elastic properties. The  stretching of the polymer foil with a corresponding force causes larger distances between neighbouring filler  particles that leads to a significant increase in resistance (decrease of current) of the aligned particle network.  Compared to homogeneous polymer composites, this concept allows the use of much lower filler concentrations and  increases the sensitivity especially for very low strain.   The sensor sensitivity is mainly characterized by (i) the elastic properties of the supporting polymer foil and (ii)  the number of aligned particles in a row between the contact electrodes. The reason for the latter is given by the non- linear relationship between the resistivity Ï� of hopping conduction occurring between neighboring particles and their  distance d. This relationship is exponential and given by [7]        for small electric field strengths, where Î± is the inverse localization length, W the activation energy, k the  Boltzmann constant, and T the temperature. Therefore, the sensor itself should have an exponential characteristic.  The theoretical limit of strain measurements is given by an arrangement of two aligned particles. In this set-up, the  detection range lies between zero and the maximum hopping distance that is about 10 nm at room temperature [8].  An additional advantage of the sensor concept under investigation is the possibility to perform direction- dependent measurements due to the anisotropic orientation of the filler material. By aligning particles perpendicular  to each other on top of the polymer foil, two-dimensional measurements can be performed very efficiently. To gain  additional information about elongations in the third dimension particles have to be aligned perpendicular to the  substrate surface.   Composite (filled with tellurium nanorods) Polymer foil Metallic electrodes (Au) A V 0 - + I 1 A V 0 - + I 2 I 1 &gt;&gt; I 2 F F   Fig. 1. Strain sensor set-up with electrical read-out; the applied force F causes a decrease of current I at constant voltage V 0 .  2. Experimental  2.1. Materials  The use of filler materials with high aspect ratio (length-diameter ratio) like rod- or wire-shaped particles is  preferred because of higher resulting forces during the dielectrophoretic alignment process leading to well organized  parallel networks. The material of choice is tellurium. Tellurium is a semi-conductor with a very narrow band gap of  0.32 eV and a room temperature conductivity of 2 (â„¦cm) -1  [9]. It shows ohmic contacts to the used gold electrodes  (low difference in work function of 0.2 eV). Tellurium nanorods can be synthesized easily due to its crystallographic  structure [10]. Synthesized tellurium nanorods are presented in figure 2(a).   Poly(vinyl acetate) is used as polymer matrix because of its strong bonding properties to most polymers and its  visco-elastic properties at room temperature.    ï£º ï£» ï£¹ ï£¯ ï£° ï£® +âˆ� kT W dÎ±Ï� 2exp A. Nocke et al. / Procedia Chemistry 1 (2009) 1151â€“11541152    a)    b)  50 Âµm Direction of elongation   Fig. 2. (a) SEM image of synthesized tellurium nanorods; (b) Optical image of the sensor structure with aligned tellurium nanorods between two  electrodes (dark areas).  The elastic substrate determines the load transmission between the initial force and the electrical network. Foils  of polyimide (PI) and polyethylene terephthalate (PET) are investigated. Their relevant mechanical properties are  presented in table 1. Prior to the yield point the material will deform elastically. Therefore, it determines the  maximum possible strain of the polymer foil during operation. Additionally, both foils have good long-term stability  if operated within the elastic range.   Table 1. Mechanical properties of investigated substrate materials.  Foil PI PET  Young's modulus [MPa] 3200 2800  Yield point  [%] 3 50  2.2. Sensor fabrication   The fabrication of the sensor structure comprises the following steps: (i) definition of metallic electrodes on top  of the substrate by lift-off technique, (ii) coating of the homogenous compound of polymer matrix and tellurium  nanorods, and (iii) dielectrophoretic alignment of particles between electrodes in the liquid matrix (in melting state  or in solvent). Dielectrophoresis is based on the polarizability of a material in an electric field. The resulting  dielectrophoretic force is directed towards higher electrical field intensity if the permittivity of the particle is larger  than the permittivity of the surrounding media. This condition is satisfied for almost all conducting particles  including tellurium nanorods in a non-ionic liquid.  Figure 2(b) shows a characteristic sensor element. The nanorods  preferentially create channels of several particles in a row. This is caused by the network creation process during  dielectrophoresis. The high electric field gradient at the end of a nanorod leads to strong attracting forces towards  other nanorods at these ends.  3. Results and Discussion  Figure 3 shows characteristic sensor signals for substrates of PI and PET. Both sensor characteristics have the  predicted exponential relationship between elongation and resistance, almost no hysteresis, and good  reproducibility. The maximum relative resistance change is 150 % and 180 % at 1 % strain for the sensor set-up  with the PI-substrate and the PET-substrate, respectively. The influence of the substrate material seems to be of  minor importance because of the similarity of both curves. A fixed elongation change of the substrate leads to  defined gap changes between the aligned particles resulting in comparable electrical characteristics. The mechanical  properties of the substrate material are of major importance, when force or pressure is to be detected. In this case,  Youngâ€™s modulus of the polymer substrate determines the sensor sensitivity decisively.  1153A. Nocke et al. / Procedia Chemistry 1 (2009) 1151â€“1154  Direction-dependant measurements show quite low cross-sensitivity (figure 4). At 1% strain the cross-sensitivity  shows a factor of less than 0.1. This cross-sensitivity is mainly given by non-perfect anisotropic alignment of the  nanorods. The optimization of the dielectrophoretic process will result in a better direction-sensitive characteristics  of these sensors.  a)     b)  c)    Fig. 3. Relative resistance change vs. strain for sensor set-up (a) on PI-foil (R = 2 Mâ„¦, L = 3mm) and (b) on PET-foil (R = 5 Mâ„¦, L = 10mm)  and (c) on PI-foil longitudinal and transverse to the direction of alignment.  4. Summary  A novel concept for strain sensors is presented. The sensor consists of aligned tellurium nanorods within a  polymer matrix on top of an elastic foil of PI and PET. Nanorod alignment is done using dielectrophoresis. The set- up shows promising properties for high-sensitive and accurate mechanical measurements. The highest reproducible  resistance chance amounts to about 180 % at a strain of 1 %. Additionally, direction-dependent measurements were  performed and showed low cross-sensitivity for elongations transverse to the direction of alignment.   References  1. Star A, Kauffman DR. Carbon Nanotube Gas and Vapor Sensors. Angew Chem Int Ed 2008;47:6550-6570.  2. Li Y, Wang H, Cao X, Yuan M , Yang M. A composite of polyelectrolyte-grafted multi-walled carbon nanotubes and in situ polymerized  polyaniline for the detection of low concentration triethylamine vapor. Nanotechnology 2008;19:015503+5.  3. Kaden H, Jahn H, Berthold M. Study of the glass/polypyrrole interface in an all-solid-state pH sensor. Solid State Ionics 2004;169:129-133.  4. Murugaraj P, Mainwaring D, Mora-Huertas N. Thermistor behaviour in a semiconducting polymerâ€“nanoparticle composite film. J Phys D:  Appl Phys 2006;39:2072-2078.  5. Knite M, Teteris V, Kiploka A, Kaupuzs J. Polyisoprene-carbon black nanocomposites as tensile strain and pressure sensor materials. Sens  Actuators, A  2004;110:142-149.  6. Cochrane C, Koncar V, Lewandowski M, Dufour C. Design and Development of a Flexible Strain Sensor for Textile Structures Based on a  Conductive Polymer Composite. Sensors 2007;7:473-492.  7. Mott NF, Davis EA. Electronic processes in non-crystalline materials. 2nd ed. Oxford: Oxford Univ. Press; 1979.  8. Overhof H. Hopping conductivity in disordered solids. In: Treusch J, editor. FestkÃ¶rperprobleme 16, Berlin/Heidelberg: Springer Verlag;  1976, p. 239â€“265.  9. Nussbaum A. Electrical Properties of Pure Tellurium and Tellurium-Selenium Alloys. Phys Rev 1954;94:337-342.  10. Mayers B, Xia Y. One-dimensional nanostructures of trigonal tellurium with various morphologies can be synthesized using a solution- phase approach. J Mater Chem 2002;12:1875-1881.  0 20 40 60 80 100 120 140 160 0 1 2 3 âˆ†L/L [%] âˆ†R/R [%] longitudinal transverse 0 50 100 150 200 0 0,2 0,4 0,6 0,8 1 âˆ†L/L [%] âˆ†R/R [%] 0 50 100 150 200 0 0,2 0,4 0,6 0,8 1 âˆ†L/L [%] âˆ†R/R [%]  A. Nocke et al. / Procedia Chemistry 1 (2009) 1151â€“11541154 leads to strong attracting forces towards  other nanorods at these ends.  3. Results and Discussion  Figure 3 shows characteristic sensor signals for substrates of PI and PET. Both sensor characteristics have the  predicted exponential relationship between elongation and resistance, almost no hysteresis, and good  reproducibility. The maximum relative resistance change is 150 % and 180 % at 1 % strain for the sensor set-up  with the PI-substrate and the PET-substrate, respectively. The influence of the substrate material seems to be of  minor importance because of the similarity of both curves. A fixed elongation change of the substrate leads to  defined gap changes between the aligned particles resulting in comparable electrical characteristics. The mechanical  properties of the substrate material are of major importance, when force or pressure is to be detected. In this case,  Youngâ€™s modulus of the polymer substrate determines the sensor sensitivity decisively.  1153A. Nocke et al. / Procedia Chemistry 1 (2009) 1151â€“1154  Direction-dependant measurements show quite low cross-sensitivity (figure 4). At 1% strain the cross-sensitivity  shows a factor of less than 0.1. This cross-sensitivity is mainly given by non-perfect anisotropic alignment of the  nanorods. The optimization of the dielectrophoretic process will result in a better direction-sensitive characteristics  of these sensors.  a)     b)  c)    Fig. 3. Relative resistance change vs. strain for sensor set-up (a) on PI-foil (R = 2 Mâ„¦, L = 3mm) and (b) on PET-foil (R = 5 Mâ„¦, L = 10mm)  and (c) on PI-foil longitudinal and transverse to the direction of alignment.  4. Summary  A novel concept for strain sensors is presented. The sensor consists of aligned tellurium nanorods within a  polymer matrix on top of an elastic foil of PI and PET. Nanorod alignment is done using dielectrophoresis. The set- up shows promising properties for high-sensitive and accurate mechanical measurements. The highest reproducible  resistance chance amounts to about 180 % at a strain of 1 %. Additionally, direction-dependent measurements were  performed and showed low cross-sensitivity for elongations transverse to the direction of alignment.   References  1. Star A, Kauffman DR. Carbon Nanotube Gas and Vapor Sensors. Angew Chem Int Ed 2008;47:6550-6570.  2. Li Y, Wang H, Cao X, Yuan M , Yang M. A composite of polyelectrolyte-grafted multi-walled carbon nanotubes and in situ polymerized  polyaniline for the detection of low concentration triethylamine vapor. Nanotechnology 2008;19:015503+5.  3. Kaden H, Jahn H, Berthold M. Study of the glass/polypyrrole interface in an all-solid-state pH sensor. Solid State Ionics 2004;169:129-133.  4. Murugaraj P, Mainwaring D, Mora-Huertas N. Thermistor behaviour in a semiconducting polymerâ€“nanoparticle composite film. J Phys D:  Appl Phys 2006;39:2072-2078.  5. Knite M, Teteris V, Kiploka A, Kaupuzs J. Polyisoprene-carbon black nanocomposites as tensile strain and pressure sensor materials. Sens  Actuators, A  2004;110:142-149.  6. Cochrane C, Koncar V, Lewandowski M, Dufour C. Design and Development of a Flexible Strain Sensor for Textile Structures Based on a  Conductive Polymer Composite. Sensors 2007;7:473-492.  7. Mott NF, Davis EA. Electronic processes in non-crystalline materials. 2nd ed. Oxford: Oxford Univ. Press; 1979.  8. Overhof H. Hopping conductivity in disordered solids. In: Treusch J, editor. FestkÃ¶rperprobleme 16, Berlin/Heidelberg: Springer Verlag;  1976, p. 239â€“265.  9. Nussbaum A. Electrical Properties of Pure Tellurium and Tellurium-Selenium Alloys. Phys Rev 1954;94:337-342.  10. Mayers B, Xia Y. One-dimensional nanostructures of trigonal tellurium with various morpholo</xocs:rawtext><xocs:serial-item xmlns:xoe="http://www.elsevier.com/xml/xoe/dtd">
+      <article xmlns="http://www.elsevier.com/xml/ja/dtd" version="5.0" docsubtype="fla" xml:lang="en">
+         <item-info>
+            <jid>PROCHE</jid>
+            <aid>1.286</aid>
+            <ce:pii>S1876-6196(09)00288-5</ce:pii>
+            <ce:doi>10.1016/j.proche.2009.07.287</ce:doi>
+            <ce:copyright type="unknown" year="2009"/>
+         </item-info>
+         <head>
+            <ce:dochead>
+               <ce:textfn>Proceedings of the Eurosensors XXIII conference</ce:textfn>
+            </ce:dochead>
+            <ce:title>Polymer composite strain sensor based on dielectrophoretically aligned tellurium nanorods</ce:title>
+            <ce:author-group>
+               <ce:author>
+                  <ce:given-name>A.</ce:given-name>
+                  <ce:surname>Nocke</ce:surname>
+                  <ce:cross-ref refid="aff1">
+                     <ce:sup loc="post">a</ce:sup>
+                  </ce:cross-ref>
+                  <ce:cross-ref refid="cor1">
+                     <ce:sup loc="post">⁎</ce:sup>
+                  </ce:cross-ref>
+                  
+               </ce:author>
+               <ce:author>
+                  <ce:given-name>S.</ce:given-name>
+                  <ce:surname>Richter</ce:surname>
+                  <ce:cross-ref refid="aff1">
+                     <ce:sup loc="post">a</ce:sup>
+                  </ce:cross-ref>
+               </ce:author>
+               <ce:author>
+                  <ce:given-name>M.</ce:given-name>
+                  <ce:surname>Wolf</ce:surname>
+                  <ce:cross-ref refid="aff1">
+                     <ce:sup loc="post">a</ce:sup>
+                  </ce:cross-ref>
+               </ce:author>
+               <ce:author>
+                  <ce:given-name>G.</ce:given-name>
+                  <ce:surname>Gerlach</ce:surname>
+                  <ce:cross-ref refid="aff1">
+                     <ce:sup loc="post">a</ce:sup>
+                  </ce:cross-ref>
+               </ce:author>
+               <ce:affiliation id="aff1">
+                  <ce:label>a</ce:label>
+                  <ce:textfn>Solid-State Electronics Laboratory, Technische Universität Dresden, Helmholtzstraße 18, 01062 Dresden, Germany</ce:textfn>
+               </ce:affiliation>
+               <ce:correspondence id="cor1">
+                  <ce:label>⁎</ce:label>
+                  <ce:text>Corresponding author. Tel.: +49-351-463-36076 ; fax: +49-351-463-32320.</ce:text>
+               </ce:correspondence>
+            </ce:author-group>
+            <ce:abstract class="author"><ce:abstract-sec>
+                  <ce:simple-para view="all">A novel sensor set-up for mechanical sensing based on a polymer composite with aligned filler material is presented. In our approach tellurium nanorods are aligned by dielectrophoresis and embedded in a thin layer of a visco-elastic polymer on top of an elastomeric polymer foil. The stretching of the polymer foil increases the gap between neighboring particles, which leads to a significant increase in resistance. The highest reproducible resistance change is about 180% at a strain of 1%. Additionally, it is possible to perform direction-sensitive measurements due to the anisotropic alignment of the conducting network.</ce:simple-para>
+               </ce:abstract-sec></ce:abstract>
+            <ce:keywords class="keyword">
+               <ce:section-title>Keywords</ce:section-title>
+               <ce:keyword>
+                  <ce:text>Strain sensor</ce:text>
+               </ce:keyword>
+               <ce:keyword>
+                  <ce:text>polymer composite</ce:text>
+               </ce:keyword>
+               <ce:keyword>
+                  <ce:text>dielectrophoresis</ce:text>
+               </ce:keyword>
+               <ce:keyword>
+                  <ce:text>tellurium nanorods</ce:text>
+               </ce:keyword>
+            </ce:keywords>
+         </head>
+         <tail view="all">
+            <ce:bibliography view="all">
+               <ce:section-title>References</ce:section-title>
+               <ce:bibliography-sec>
+                  <ce:bib-reference id="bib1">
+                     <ce:label>1.</ce:label>
+                     <sb:reference>
+                        <sb:contribution langtype="en">
+                           <sb:authors>
+                              <sb:author>
+                                 <ce:given-name>A</ce:given-name>
+                                 <ce:surname>Star</ce:surname>
+                              </sb:author>
+                              <sb:author>
+                                 <ce:given-name>DR</ce:given-name>
+                                 <ce:surname>Kauffman</ce:surname>
+                              </sb:author>
+                           </sb:authors>
+                           <sb:title>
+                              <sb:maintitle>Carbon Nanotube Gas and Vapor Sensors</sb:maintitle>
+                           </sb:title>
+                        </sb:contribution>
+                        <sb:host>
+                           <sb:issue>
+                              <sb:series>
+                                 <sb:title>
+                                    <sb:maintitle>Angew Chem Int Ed</sb:maintitle>
+                                 </sb:title>
+                                 <sb:volume-nr>47</sb:volume-nr>
+                              </sb:series>
+                              <sb:date>2008</sb:date>
+                           </sb:issue>
+                           <sb:pages>
+                              <sb:first-page>6550</sb:first-page>
+                              <sb:last-page>6570</sb:last-page>
+                           </sb:pages>
+                        </sb:host>
+                     </sb:reference>
+                  </ce:bib-reference>
+                  <ce:bib-reference id="bib2">
+                     <ce:label>2.</ce:label>
+                     <sb:reference>
+                        <sb:contribution langtype="en">
+                           <sb:authors>
+                              <sb:author>
+                                 <ce:given-name>Y</ce:given-name>
+                                 <ce:surname>Li</ce:surname>
+                              </sb:author>
+                              <sb:author>
+                                 <ce:given-name>H</ce:given-name>
+                                 <ce:surname>Wang</ce:surname>
+                              </sb:author>
+                              <sb:author>
+                                 <ce:given-name>X</ce:given-name>
+                                 <ce:surname>Cao</ce:surname>
+                              </sb:author>
+                              <sb:author>
+                                 <ce:given-name>M</ce:given-name>
+                                 <ce:surname>Yuan</ce:surname>
+                              </sb:author>
+                              <sb:author>
+                                 <ce:given-name>M</ce:given-name>
+                                 <ce:surname>Yang</ce:surname>
+                              </sb:author>
+                           </sb:authors>
+                           <sb:title>
+                              <sb:maintitle>A composite of polyelectrolyte-grafted multi-walled carbon nanotubes and in situ polymerized polyaniline for the detection of low concentration triethylamine vapor</sb:maintitle>
+                           </sb:title>
+                        </sb:contribution>
+                        <sb:host>
+                           <sb:issue>
+                              <sb:series>
+                                 <sb:title>
+                                    <sb:maintitle>Nanotechnology</sb:maintitle>
+                                 </sb:title>
+                                 <sb:volume-nr>19</sb:volume-nr>
+                              </sb:series>
+                              <sb:date>2008</sb:date>
+                           </sb:issue>
+                        </sb:host>
+                        <sb:comment>015503+5</sb:comment>
+                     </sb:reference>
+                  </ce:bib-reference>
+                  <ce:bib-reference id="bib3">
+                     <ce:label>3.</ce:label>
+                     <sb:reference>
+                        <sb:contribution langtype="en">
+                           <sb:authors>
+                              <sb:author>
+                                 <ce:given-name>H</ce:given-name>
+                                 <ce:surname>Kaden</ce:surname>
+                              </sb:author>
+                              <sb:author>
+                                 <ce:given-name>H</ce:given-name>
+                                 <ce:surname>Jahn</ce:surname>
+                              </sb:author>
+                              <sb:author>
+                                 <ce:given-name>M</ce:given-name>
+                                 <ce:surname>Berthold</ce:surname>
+                              </sb:author>
+                           </sb:authors>
+                           <sb:title>
+                              <sb:maintitle>Study of the glass/polypyrrole interface in an all-solid-state pH sensor</sb:maintitle>
+                           </sb:title>
+                        </sb:contribution>
+                        <sb:host>
+                           <sb:issue>
+                              <sb:series>
+                                 <sb:title>
+                                    <sb:maintitle>Solid State Ionics</sb:maintitle>
+                                 </sb:title>
+                                 <sb:volume-nr>169</sb:volume-nr>
+                              </sb:series>
+                              <sb:date>2004</sb:date>
+                           </sb:issue>
+                           <sb:pages>
+                              <sb:first-page>129</sb:first-page>
+                              <sb:last-page>133</sb:last-page>
+                           </sb:pages>
+                        </sb:host>
+                     </sb:reference>
+                  </ce:bib-reference>
+                  <ce:bib-reference id="bib4">
+                     <ce:label>4.</ce:label>
+                     <sb:reference>
+                        <sb:contribution langtype="en">
+                           <sb:authors>
+                              <sb:author>
+                                 <ce:given-name>P</ce:given-name>
+                                 <ce:surname>Murugaraj</ce:surname>
+                              </sb:author>
+                              <sb:author>
+                                 <ce:given-name>D</ce:given-name>
+                                 <ce:surname>Mainwaring</ce:surname>
+                              </sb:author>
+                              <sb:author>
+                                 <ce:given-name>N</ce:given-name>
+                                 <ce:surname>Mora-Huertas</ce:surname>
+                              </sb:author>
+                           </sb:authors>
+                           <sb:title>
+                              <sb:maintitle>Thermistor behaviour in a semiconducting polymer–nanoparticle composite film</sb:maintitle>
+                           </sb:title>
+                        </sb:contribution>
+                        <sb:host>
+                           <sb:issue>
+                              <sb:series>
+                                 <sb:title>
+                                    <sb:maintitle>J Phys D: Appl Phys</sb:maintitle>
+                                 </sb:title>
+                                 <sb:volume-nr>39</sb:volume-nr>
+                              </sb:series>
+                              <sb:date>2006</sb:date>
+                           </sb:issue>
+                           <sb:pages>
+                              <sb:first-page>2072</sb:first-page>
+                              <sb:last-page>2078</sb:last-page>
+                           </sb:pages>
+                        </sb:host>
+                     </sb:reference>
+                  </ce:bib-reference>
+                  <ce:bib-reference id="bib5">
+                     <ce:label>5.</ce:label>
+                     <sb:reference>
+                        <sb:contribution langtype="en">
+                           <sb:authors>
+                              <sb:author>
+                                 <ce:given-name>M</ce:given-name>
+                                 <ce:surname>Knite</ce:surname>
+                              </sb:author>
+                              <sb:author>
+                                 <ce:given-name>V</ce:given-name>
+                                 <ce:surname>Teteris</ce:surname>
+                              </sb:author>
+                              <sb:author>
+                                 <ce:given-name>A</ce:given-name>
+                                 <ce:surname>Kiploka</ce:surname>
+                              </sb:author>
+                              <sb:author>
+                                 <ce:given-name>J</ce:given-name>
+                                 <ce:surname>Kaupuzs</ce:surname>
+                              </sb:author>
+                           </sb:authors>
+                           <sb:title>
+                              <sb:maintitle>Polyisoprene-carbon black nanocomposites as tensile strain and pressure sensor materials</sb:maintitle>
+                           </sb:title>
+                        </sb:contribution>
+                        <sb:host>
+                           <sb:issue>
+                              <sb:series>
+                                 <sb:title>
+                                    <sb:maintitle>Sens Actuators, A</sb:maintitle>
+                                 </sb:title>
+                                 <sb:volume-nr>110</sb:volume-nr>
+                              </sb:series>
+                              <sb:date>2004</sb:date>
+                           </sb:issue>
+                           <sb:pages>
+                              <sb:first-page>142</sb:first-page>
+                              <sb:last-page>149</sb:last-page>
+                           </sb:pages>
+                        </sb:host>
+                     </sb:reference>
+                  </ce:bib-reference>
+                  <ce:bib-reference id="bib6">
+                     <ce:label>6.</ce:label>
+                     <sb:reference>
+                        <sb:contribution langtype="en">
+                           <sb:authors>
+                              <sb:author>
+                                 <ce:given-name>C</ce:given-name>
+                                 <ce:surname>Cochrane</ce:surname>
+                              </sb:author>
+                              <sb:author>
+                                 <ce:given-name>V</ce:given-name>
+                                 <ce:surname>Koncar</ce:surname>
+                              </sb:author>
+                              <sb:author>
+                                 <ce:given-name>M</ce:given-name>
+                                 <ce:surname>Lewandowski</ce:surname>
+                              </sb:author>
+                              <sb:author>
+                                 <ce:given-name>C</ce:given-name>
+                                 <ce:surname>Dufour</ce:surname>
+                              </sb:author>
+                           </sb:authors>
+                           <sb:title>
+                              <sb:maintitle>Design and Development of a Flexible Strain Sensor for Textile Structures Based on a Conductive Polymer Composite</sb:maintitle>
+                           </sb:title>
+                        </sb:contribution>
+                        <sb:host>
+                           <sb:issue>
+                              <sb:series>
+                                 <sb:title>
+                                    <sb:maintitle>Sensors</sb:maintitle>
+                                 </sb:title>
+                                 <sb:volume-nr>7</sb:volume-nr>
+                              </sb:series>
+                              <sb:date>2007</sb:date>
+                           </sb:issue>
+                           <sb:pages>
+                              <sb:first-page>473</sb:first-page>
+                              <sb:last-page>492</sb:last-page>
+                           </sb:pages>
+                        </sb:host>
+                     </sb:reference>
+                  </ce:bib-reference>
+                  <ce:bib-reference id="bib7">
+                     <ce:label>7.</ce:label>
+                     <sb:reference>
+                        <sb:contribution langtype="en">
+                           <sb:authors>
+                              <sb:author>
+                                 <ce:given-name>NF</ce:given-name>
+                                 <ce:surname>Mott</ce:surname>
+                              </sb:author>
+                              <sb:author>
+                                 <ce:given-name>EA</ce:given-name>
+                                 <ce:surname>Davis</ce:surname>
+                              </sb:author>
+                           </sb:authors>
+                        </sb:contribution>
+                        <sb:host>
+                           <sb:edited-book>
+                              <sb:title>
+                                 <sb:maintitle>Electronic processes in non-crystalline materials</sb:maintitle>
+                              </sb:title>
+                              <sb:edition>2nd ed.</sb:edition>
+                              <sb:date>1979</sb:date>
+                              <sb:publisher>
+                                 <sb:name>Oxford</sb:name>
+                                 <sb:location>Oxford Univ. Press</sb:location>
+                              </sb:publisher>
+                           </sb:edited-book>
+                        </sb:host>
+                     </sb:reference>
+                  </ce:bib-reference>
+                  <ce:bib-reference id="bib8">
+                     <ce:label>8.</ce:label>
+                     <sb:reference>
+                        <sb:contribution langtype="en">
+                           <sb:authors>
+                              <sb:author>
+                                 <ce:given-name>H</ce:given-name>
+                                 <ce:surname>Overhof</ce:surname>
+                              </sb:author>
+                           </sb:authors>
+                           <sb:title>
+                              <sb:maintitle>Hopping conductivity in disordered solids</sb:maintitle>
+                           </sb:title>
+                        </sb:contribution>
+                        <sb:host>
+                           <sb:edited-book>
+                              <sb:editors>
+                                 <sb:editor>
+                                    <ce:given-name>J</ce:given-name>
+                                    <ce:surname>Treusch</ce:surname>
+                                 </sb:editor>
+                              </sb:editors>
+                              <sb:title>
+                                 <sb:maintitle>Festkörperprobleme 16</sb:maintitle>
+                              </sb:title>
+                              <sb:date>1976</sb:date>
+                              <sb:publisher>
+                                 <sb:name>Berlin/Heidelberg</sb:name>
+                                 <sb:location>Springer Verlag</sb:location>
+                              </sb:publisher>
+                           </sb:edited-book>
+                           <sb:pages>
+                              <sb:first-page>239</sb:first-page>
+                              <sb:last-page>265</sb:last-page>
+                           </sb:pages>
+                        </sb:host>
+                     </sb:reference>
+                  </ce:bib-reference>
+                  <ce:bib-reference id="bib9">
+                     <ce:label>9.</ce:label>
+                     <sb:reference>
+                        <sb:contribution langtype="en">
+                           <sb:authors>
+                              <sb:author>
+                                 <ce:given-name>A</ce:given-name>
+                                 <ce:surname>Nussbaum</ce:surname>
+                              </sb:author>
+                           </sb:authors>
+                           <sb:title>
+                              <sb:maintitle>Electrical Properties of Pure Tellurium and Tellurium-Selenium Alloys</sb:maintitle>
+                           </sb:title>
+                        </sb:contribution>
+                        <sb:host>
+                           <sb:issue>
+                              <sb:series>
+                                 <sb:title>
+                                    <sb:maintitle>Phys Rev</sb:maintitle>
+                                 </sb:title>
+                                 <sb:volume-nr>94</sb:volume-nr>
+                              </sb:series>
+                              <sb:date>1954</sb:date>
+                           </sb:issue>
+                           <sb:pages>
+                              <sb:first-page>337</sb:first-page>
+                              <sb:last-page>342</sb:last-page>
+                           </sb:pages>
+                        </sb:host>
+                     </sb:reference>
+                  </ce:bib-reference>
+                  <ce:bib-reference id="bib10">
+                     <ce:label>10.</ce:label>
+                     <sb:reference>
+                        <sb:contribution langtype="en">
+                           <sb:authors>
+                              <sb:author>
+                                 <ce:given-name>B</ce:given-name>
+                                 <ce:surname>Mayers</ce:surname>
+                              </sb:author>
+                              <sb:author>
+                                 <ce:given-name>Y</ce:given-name>
+                                 <ce:surname>Xia</ce:surname>
+                              </sb:author>
+                           </sb:authors>
+                           <sb:title>
+                              <sb:maintitle>One-dimensional nanostructures of trigonal tellurium with various morphologies can be synthesized using a solutionphase approach</sb:maintitle>
+                           </sb:title>
+                        </sb:contribution>
+                        <sb:host>
+                           <sb:issue>
+                              <sb:series>
+                                 <sb:title>
+                                    <sb:maintitle>J Mater Chem</sb:maintitle>
+                                 </sb:title>
+                                 <sb:volume-nr>12</sb:volume-nr>
+                              </sb:series>
+                              <sb:date>2002</sb:date>
+                           </sb:issue>
+                           <sb:pages>
+                              <sb:first-page>1875</sb:first-page>
+                              <sb:last-page>1881</sb:last-page>
+                           </sb:pages>
+                        </sb:host>
+                     </sb:reference>
+                  </ce:bib-reference>
+               </ce:bibliography-sec>
+            </ce:bibliography>
+         </tail>
+      </article>
+   </xocs:serial-item></xocs:doc></originalText></full-text-retrieval-response>
